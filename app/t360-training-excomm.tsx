@@ -67,7 +67,7 @@ export default function T360TrainingExcommScreen() {
           <ArrowLeft size={22} color={N.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle} maxFontSizeMultiplier={1.3}>
-          Excomm training
+          Excomm Training
         </Text>
         <View style={styles.headerSpacer} />
       </View>

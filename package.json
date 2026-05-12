@@ -21,6 +21,9 @@
     "fix-deps": "npx expo install --check && npm audit fix",
     "test:supabase": "node scripts/test-supabase-connection.js",
     "test:web": "node scripts/start-product-web.js",
+    "local:web": "node scripts/start-product-web.js",
+    "serve:web-dist": "node scripts/serve-web-dist.mjs",
+    "preview:web": "npm run build:web && npm run serve:web-dist",
     "local:test-web": "node scripts/local-web-server.mjs",
     "android": "expo run:android",
     "ios": "expo run:ios"

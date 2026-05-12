@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useFocusEffect } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
@@ -724,6 +724,9 @@ export default function MyJourney() {
     }
   }, [user?.currentClubId, user?.id, refetchJourneyHome, queryClient]);
 
+  const refreshCurrentOpenMeetingRef = useRef(refreshCurrentOpenMeeting);
+  refreshCurrentOpenMeetingRef.current = refreshCurrentOpenMeeting;
+
   useFocusEffect(
     useCallback(() => {
       refreshCurrentOpenMeeting();
@@ -760,15 +763,16 @@ export default function MyJourney() {
           filter: `club_id=eq.${user.currentClubId}`,
         },
         () => {
-          refreshCurrentOpenMeeting();
+          void refreshCurrentOpenMeetingRef.current();
         }
       )
       .subscribe();
 
     return () => {
+      void meetingChannel.unsubscribe();
       supabase.removeChannel(meetingChannel);
     };
-  }, [user?.currentClubId, refreshCurrentOpenMeeting]);
+  }, [user?.currentClubId]);
 
   useEffect(() => {
     if (!user?.currentClubId || !user?.id) return;

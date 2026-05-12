@@ -2,7 +2,18 @@ import React from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
-import { ArrowLeft, ChevronRight, GraduationCap, Users } from 'lucide-react-native';
+import {
+  ArrowLeft,
+  CalendarDays,
+  ChevronRight,
+  GraduationCap,
+  Home,
+  Landmark,
+  Settings,
+  Shield,
+  Users,
+} from 'lucide-react-native';
+import { goBackOrReplace } from '@/lib/trainingBackNavigation';
 
 const N = {
   page: '#FBFBFA',
@@ -16,21 +27,36 @@ const N = {
 type TrainingRowProps = {
   title: string;
   description: string;
+  descriptionEmphasized?: boolean;
   icon: React.ReactNode;
   hideBottomBorder?: boolean;
   onPress?: () => void;
 };
 
-function TrainingRow({ title, description, icon, hideBottomBorder, onPress }: TrainingRowProps) {
+function TrainingRow({
+  title,
+  description,
+  descriptionEmphasized,
+  icon,
+  hideBottomBorder,
+  onPress,
+}: TrainingRowProps) {
   return (
-    <TouchableOpacity style={[styles.row, hideBottomBorder && styles.rowNoBorder]} activeOpacity={0.7} onPress={onPress}>
+    <TouchableOpacity
+      style={[styles.row, hideBottomBorder && styles.rowNoBorder]}
+      activeOpacity={0.7}
+      onPress={onPress ?? (() => {})}
+    >
       <View style={styles.rowLeft}>
         <View style={styles.iconTile}>{icon}</View>
         <View style={styles.textWrap}>
           <Text style={styles.rowTitle} maxFontSizeMultiplier={1.3}>
             {title}
           </Text>
-          <Text style={styles.rowDesc} maxFontSizeMultiplier={1.25}>
+          <Text
+            style={descriptionEmphasized ? styles.rowDescEmphasis : styles.rowDesc}
+            maxFontSizeMultiplier={1.25}
+          >
             {description}
           </Text>
         </View>
@@ -44,7 +70,11 @@ export default function T360TrainingScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()} activeOpacity={0.7}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => goBackOrReplace('/(tabs)/settings')}
+          activeOpacity={0.7}
+        >
           <ArrowLeft size={22} color={N.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle} maxFontSizeMultiplier={1.3}>
@@ -56,15 +86,53 @@ export default function T360TrainingScreen() {
       <View style={styles.group}>
         <TrainingRow
           icon={<Users size={18} color="#2563EB" strokeWidth={1.8} />}
-          title="Excomm training"
-          description="Placeholder"
+          title="Excomm Training"
+          description="Guides and resources for ExComm members."
+          descriptionEmphasized
           onPress={() => router.push('/t360-training-excomm')}
         />
         <TrainingRow
           icon={<GraduationCap size={18} color="#7C3AED" strokeWidth={1.8} />}
-          title="Roles training"
-          description="Placeholder"
+          title="Role Booking"
+          description="Book meeting roles easily and participate actively in club meetings."
+          descriptionEmphasized
+          onPress={() => router.push('/t360-training-role-booking')}
+        />
+        <TrainingRow
+          icon={<Home size={18} color="#0D9488" strokeWidth={1.8} />}
+          title="Getting Started with Home Tab"
+          description="Everything you need to participate, prepare, and track your Toastmasters journey in one place."
+          descriptionEmphasized
+          onPress={() => router.push('/t360-training-home-tab')}
+        />
+        <TrainingRow
+          icon={<Landmark size={18} color="#CA8A04" strokeWidth={1.8} />}
+          title="Explore Your Club"
+          description="Explore your club, stay connected, and track club activities and performance"
+          descriptionEmphasized
+          onPress={() => router.push('/t360-training-explore-club')}
+        />
+        <TrainingRow
+          icon={<CalendarDays size={18} color="#0369A1" strokeWidth={1.8} />}
+          title="Meeting Tab Overview"
+          description="Manage upcoming meetings, access meeting history, and stay updated on club sessions."
+          descriptionEmphasized
+          onPress={() => router.push('/t360-training-meeting-tab')}
+        />
+        <TrainingRow
+          icon={<Shield size={18} color="#7F1D1D" strokeWidth={1.8} />}
+          title="Admin Overview"
+          description="Manage club operations, members, meetings, and settings from one central place."
+          descriptionEmphasized
+          onPress={() => router.push('/t360-training-admin-overview')}
+        />
+        <TrainingRow
+          icon={<Settings size={18} color="#57534E" strokeWidth={1.8} />}
+          title="Settings Tab Overview"
+          description="Manage your profile, preferences, support options, and account settings in one place."
+          descriptionEmphasized
           hideBottomBorder
+          onPress={() => router.push('/t360-training-settings-tab')}
         />
       </View>
     </SafeAreaView>
@@ -150,5 +218,11 @@ const styles = StyleSheet.create({
   rowDesc: {
     color: N.textSecondary,
     fontSize: 13,
+  },
+  rowDescEmphasis: {
+    color: 'rgba(55, 53, 47, 0.78)',
+    fontSize: 13,
+    lineHeight: 18,
+    fontStyle: 'italic',
   },
 });
