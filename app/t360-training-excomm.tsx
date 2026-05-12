@@ -3,6 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
 import { ArrowLeft, ChevronRight, Building2, UserPlus, Calendar, ListChecks, Vote } from 'lucide-react-native';
+import { goBackOrReplace } from '@/lib/trainingBackNavigation';
 
 const N = {
   page: '#FBFBFA',
@@ -15,12 +16,24 @@ const N = {
 
 type PlaceholderRowProps = {
   title: string;
+  /** Subtitle under the title; defaults to "Placeholder". */
+  description?: string;
+  /** Italics + slightly darker than the default muted line (for key rows). */
+  descriptionEmphasized?: boolean;
   hideBottomBorder?: boolean;
   icon: React.ReactNode;
   onPress?: () => void;
 };
 
-function PlaceholderRow({ title, hideBottomBorder, icon, onPress }: PlaceholderRowProps) {
+function PlaceholderRow({
+  title,
+  description,
+  descriptionEmphasized,
+  hideBottomBorder,
+  icon,
+  onPress,
+}: PlaceholderRowProps) {
+  const desc = description ?? 'Placeholder';
   return (
     <TouchableOpacity
       style={[styles.row, hideBottomBorder && styles.rowNoBorder]}
@@ -33,8 +46,11 @@ function PlaceholderRow({ title, hideBottomBorder, icon, onPress }: PlaceholderR
           <Text style={styles.rowTitle} maxFontSizeMultiplier={1.3}>
             {title}
           </Text>
-          <Text style={styles.rowDesc} maxFontSizeMultiplier={1.25}>
-            Placeholder
+          <Text
+            style={descriptionEmphasized ? styles.rowDescEmphasis : styles.rowDesc}
+            maxFontSizeMultiplier={1.25}
+          >
+            {desc}
           </Text>
         </View>
       </View>
@@ -47,7 +63,7 @@ export default function T360TrainingExcommScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()} activeOpacity={0.7}>
+        <TouchableOpacity style={styles.backButton} onPress={() => goBackOrReplace('/t360-training')} activeOpacity={0.7}>
           <ArrowLeft size={22} color={N.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle} maxFontSizeMultiplier={1.3}>
@@ -58,7 +74,9 @@ export default function T360TrainingExcommScreen() {
 
       <View style={styles.group}>
         <PlaceholderRow
-          title="Create a club"
+          title="Club Set Up"
+          description="Create and configure your club details to get started."
+          descriptionEmphasized
           icon={<Building2 size={18} color="#2563EB" strokeWidth={1.8} />}
           onPress={() => router.push('/t360-training-excomm-create-club')}
         />
@@ -158,5 +176,11 @@ const styles = StyleSheet.create({
   rowDesc: {
     color: N.textSecondary,
     fontSize: 13,
+  },
+  rowDescEmphasis: {
+    color: 'rgba(55, 53, 47, 0.78)',
+    fontSize: 13,
+    lineHeight: 18,
+    fontStyle: 'italic',
   },
 });
