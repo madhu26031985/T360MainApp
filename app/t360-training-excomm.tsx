@@ -103,7 +103,10 @@ export default function T360TrainingExcommScreen() {
         />
         <PlaceholderRow
           title="Voting operations"
+          description="Fair, structured, anonymous voting from poll creation to results."
+          descriptionEmphasized
           icon={<Vote size={18} color="#7C3AED" strokeWidth={1.8} />}
+          onPress={() => router.push('/t360-training-excomm-voting-operations')}
           hideBottomBorder
         />
       </View>
