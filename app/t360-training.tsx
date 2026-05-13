@@ -10,6 +10,7 @@ import {
   ChevronRight,
   GraduationCap,
   Home,
+  Info,
   Landmark,
   ListChecks,
   Settings,
@@ -150,6 +151,13 @@ export default function T360TrainingScreen() {
           description="Manage upcoming meetings, access meeting history, and stay updated on club sessions."
           descriptionEmphasized
           onPress={() => router.push('/t360-training-meeting-tab')}
+        />
+        <TrainingRow
+          icon={<Info size={18} color="#0F172A" strokeWidth={1.8} />}
+          title="Club Info"
+          description="Admin Panel — maintain official club details for members, guests, and the Club Tab."
+          descriptionEmphasized
+          onPress={() => router.push('/t360-training-club-info-admin')}
         />
         <TrainingRow
           icon={<Shield size={18} color="#7F1D1D" strokeWidth={1.8} />}

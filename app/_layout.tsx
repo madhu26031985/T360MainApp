@@ -71,6 +71,7 @@ function AppContent() {
         <Stack.Screen name="t360-training-home-tab" options={{ headerShown: false }} />
         <Stack.Screen name="t360-training-explore-club" options={{ headerShown: false }} />
         <Stack.Screen name="t360-training-meeting-tab" options={{ headerShown: false }} />
+        <Stack.Screen name="t360-training-club-info-admin" options={{ headerShown: false }} />
         <Stack.Screen name="t360-training-admin-overview" options={{ headerShown: false }} />
         <Stack.Screen name="t360-training-settings-tab" options={{ headerShown: false }} />
       </Stack>
