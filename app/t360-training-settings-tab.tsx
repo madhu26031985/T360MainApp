@@ -17,7 +17,7 @@ const FS = 0.9;
 const WHAT_YOU_CAN_DO = [
   'Manage your profile information',
   'Access web login and sharing options',
-  'Explore training and support resources',
+  'Open in-app T360 training',
   'Review privacy and security settings',
   'Stay updated with the latest app version',
 ];
@@ -30,15 +30,11 @@ const SHARE_APP_CHECKS = ['Share app access', 'Invite members to join'];
 
 const WEB_LOGIN_CHECKS = ['Log in through web access', 'Continue using the platform on desktop'];
 
-const WIDGET_CHECKS = ['Turn the home widget ON/OFF', 'Manage open meeting shortcuts'];
-
 const TRAINING_CHECKS = ['Explore training resources', 'Learn platform features', 'Improve product usage'];
 
 const WHATSAPP_CHECKS = ['Get instant support through WhatsApp'];
 
 const TALK_CHECKS = ['Schedule a call with the support team'];
-
-const HELP_CHECKS = ['Access FAQs', 'Find tutorials and guides', 'Contact support'];
 
 const PRIVACY_CHECKS = ['Review privacy practices and policies'];
 
@@ -61,7 +57,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: 'How do I get support?',
-    a: 'You can use WhatsApp Support, Talk to Us, or Help & Support.',
+    a: 'You can use WhatsApp Support or Talk to Us.',
   },
   {
     q: 'Can I check if I’m using the latest version?',
@@ -125,11 +121,12 @@ export default function T360TrainingSettingsTabScreen() {
             Why the Settings Tab?
           </Text>
           <Text style={styles.body} maxFontSizeMultiplier={1.25}>
-            The Settings tab gives you quick access to your profile, account preferences, support resources, and
+            The Settings tab gives you quick access to your profile, account preferences, support channels, and
             application settings — helping you personalize your experience and stay connected.
           </Text>
           <Text style={styles.body} maxFontSizeMultiplier={1.25}>
-            You can update profile details, access support, explore training resources, manage privacy settings, and more.
+            You can update profile details, reach support via WhatsApp or Talk to Us, open T360 training, manage privacy
+            settings, and more.
           </Text>
 
           <Text style={styles.calloutLabel} maxFontSizeMultiplier={1.3}>
@@ -203,20 +200,6 @@ export default function T360TrainingSettingsTabScreen() {
           </Text>
           <CheckList lines={WEB_LOGIN_CHECKS} />
 
-          <Text style={styles.subFeatureHeading} maxFontSizeMultiplier={1.25}>
-            Home Screen Widget
-          </Text>
-          <Text style={styles.body} maxFontSizeMultiplier={1.25}>
-            Customize quick meeting access.
-          </Text>
-          <Text style={styles.bodyLead} maxFontSizeMultiplier={1.25}>
-            You can:
-          </Text>
-          <CheckList lines={WIDGET_CHECKS} />
-          <Text style={styles.tip} maxFontSizeMultiplier={1.25}>
-            💡 Helps improve accessibility and convenience.
-          </Text>
-
           <Text style={styles.featureHeading} maxFontSizeMultiplier={1.25}>
             🎓 T360 Training
           </Text>
@@ -227,16 +210,6 @@ export default function T360TrainingSettingsTabScreen() {
             You can:
           </Text>
           <CheckList lines={TRAINING_CHECKS} />
-
-          <Text style={styles.subFeatureHeading} maxFontSizeMultiplier={1.25}>
-            Watch Training Videos
-          </Text>
-          <Text style={styles.body} maxFontSizeMultiplier={1.25}>
-            Learn how to use the platform effectively through guided videos.
-          </Text>
-          <Text style={styles.tip} maxFontSizeMultiplier={1.25}>
-            💡 Helpful for new users and feature learning.
-          </Text>
 
           <Text style={styles.featureHeading} maxFontSizeMultiplier={1.25}>
             💬 Support & Help
@@ -252,10 +225,6 @@ export default function T360TrainingSettingsTabScreen() {
             Talk to Us
           </Text>
           <CheckList lines={TALK_CHECKS} />
-          <Text style={styles.subFeatureHeading} maxFontSizeMultiplier={1.25}>
-            Help & Support
-          </Text>
-          <CheckList lines={HELP_CHECKS} />
           <Text style={styles.tip} maxFontSizeMultiplier={1.25}>
             💡 Designed to help users quickly resolve questions and issues.
           </Text>

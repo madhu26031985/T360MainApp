@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Modal, TextInput, Share, Platform, KeyboardAvoidingView, Switch } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Modal, TextInput, Share, Platform, KeyboardAvoidingView } from 'react-native';
 import { Linking } from 'react-native';
 import { Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,7 +10,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import {
   User,
-  CircleHelp as HelpCircle,
   LogOut,
   ChevronRight,
   Building2,
@@ -44,7 +43,6 @@ const N = {
 /** User asked to keep sign-out and delete styling; keep these as-is. */
 const SIGN_OUT_BLUE = '#3b82f6';
 const DELETE_RED = '#ef4444';
-const WIDGET_PREF_KEY = 'settings_home_widget_enabled';
 
 interface SettingItemProps {
   icon: React.ReactNode;
@@ -125,7 +123,6 @@ export default function Settings() {
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
-  const [isWidgetEnabled, setIsWidgetEnabled] = useState(false);
   const avatarAbortRef = React.useRef<AbortController | null>(null);
 
   const mutedIcon = (Icon: typeof User, size = 18) => <Icon size={size} color={N.iconMuted} strokeWidth={1.75} />;
@@ -169,18 +166,6 @@ Welcome to a seamless digital experience! 🚀`;
     router.push('/t360-training');
   };
 
-  const handleHelpSupport = async () => {
-    try {
-      const url = 'https://t360.in/support';
-      const supported = await Linking.canOpenURL(url);
-      if (supported) await Linking.openURL(url);
-      else showAlert('Error', 'Cannot open support website');
-    } catch (error) {
-      console.error('Error opening support URL:', error);
-      showAlert('Error', 'Failed to open support website');
-    }
-  };
-
   const handlePricing = async () => {
     try {
       const url = 'https://t360.in/pricing';
@@ -214,18 +199,6 @@ Welcome to a seamless digital experience! 🚀`;
     } catch (error) {
       console.error('Error opening data protection URL:', error);
       showAlert('Error', 'Failed to open data protection');
-    }
-  };
-
-  const handleTrainingVideos = async () => {
-    try {
-      const url = 'https://t360.in/demo';
-      const supported = await Linking.canOpenURL(url);
-      if (supported) await Linking.openURL(url);
-      else showAlert('Error', 'Cannot open training videos');
-    } catch (error) {
-      console.error('Error opening training videos URL:', error);
-      showAlert('Error', 'Failed to open training videos');
     }
   };
 
@@ -316,28 +289,6 @@ Welcome to a seamless digital experience! 🚀`;
       avatarAbortRef.current?.abort();
     };
   }, [user?.id]);
-
-  useEffect(() => {
-    const loadWidgetPreference = async () => {
-      try {
-        const saved = await AsyncStorage.getItem(WIDGET_PREF_KEY);
-        setIsWidgetEnabled(saved === 'true');
-      } catch (error) {
-        console.error('Error loading widget preference:', error);
-      }
-    };
-    void loadWidgetPreference();
-  }, []);
-
-  const handleToggleWidget = async (value: boolean) => {
-    setIsWidgetEnabled(value);
-    try {
-      await AsyncStorage.setItem(WIDGET_PREF_KEY, value ? 'true' : 'false');
-    } catch (error) {
-      console.error('Error saving widget preference:', error);
-      showAlert('Error', 'Failed to update widget preference. Please try again.');
-    }
-  };
 
   const loadUserAvatar = async (signal: AbortSignal) => {
     if (!user) return;
@@ -474,26 +425,6 @@ Welcome to a seamless digital experience! 🚀`;
                 onPress={() => Linking.openURL('https://t360.in/weblogin')}
               />
               <SettingItem
-                icon={themedIcon(RefreshCw, '#0EA5E9')}
-                iconBackgroundColor="#ECFEFF"
-                title="Home screen widget"
-                description="Turn widget on/off for open meetings"
-                onPress={() => {
-                  void handleToggleWidget(!isWidgetEnabled);
-                }}
-                showChevron={false}
-                rightElement={
-                  <Switch
-                    value={isWidgetEnabled}
-                    onValueChange={(value) => {
-                      void handleToggleWidget(value);
-                    }}
-                    trackColor={{ false: '#D1D5DB', true: '#93C5FD' }}
-                    thumbColor={isWidgetEnabled ? '#2563EB' : '#FFFFFF'}
-                  />
-                }
-              />
-              <SettingItem
                 icon={themedIcon(Video, '#7C3AED')}
                 iconBackgroundColor="#F5F3FF"
                 title="T360 training"
@@ -515,13 +446,6 @@ Welcome to a seamless digital experience! 🚀`;
                 onPress={handleTalkToUs}
               />
               <SettingItem
-                icon={themedIcon(HelpCircle, '#6366F1')}
-                iconBackgroundColor="#EEF2FF"
-                title="Help & support"
-                description="FAQs, contact support, tutorials"
-                onPress={handleHelpSupport}
-              />
-              <SettingItem
                 icon={themedIcon(FileText, '#475569')}
                 iconBackgroundColor="#F8FAFC"
                 title="Privacy policy"
@@ -541,20 +465,6 @@ Welcome to a seamless digital experience! 🚀`;
                 title="App version check"
                 description="Check for latest version and updates"
                 onPress={() => router.push('/version-debug')}
-                hideBottomBorder
-              />
-            </View>
-
-            <Text style={[styles.sectionLabel, { color: N.textSecondary, marginTop: 20 }]} maxFontSizeMultiplier={1.2}>
-              Product training videos
-            </Text>
-            <View style={[styles.notionGroup, { borderColor: N.border }]}>
-              <SettingItem
-                icon={themedIcon(Video, '#7C3AED')}
-                iconBackgroundColor="#F5F3FF"
-                title="Watch training videos"
-                description="Learn how to use T360 effectively"
-                onPress={handleTrainingVideos}
                 hideBottomBorder
               />
             </View>

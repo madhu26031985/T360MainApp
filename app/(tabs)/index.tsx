@@ -456,10 +456,6 @@ export default function MyJourney() {
   const [currentOpenMeetingStartTime, setCurrentOpenMeetingStartTime] = useState<string | null>(null);
   const [currentOpenMeetingEndTime, setCurrentOpenMeetingEndTime] = useState<string | null>(null);
   const [currentOpenMeetingMode, setCurrentOpenMeetingMode] = useState<string | null>(null);
-  const [meetingAttendedCount, setMeetingAttendedCount] = useState<number>(0);
-  const [speechesGivenCount, setSpeechesGivenCount] = useState<number>(0);
-  const [rolesCompletedCount, setRolesCompletedCount] = useState<number>(0);
-  const [evaluationsGivenCount, setEvaluationsGivenCount] = useState<number>(0);
   const [hasActivePoll, setHasActivePoll] = useState<boolean>(false);
   const [hasVotedInActivePoll, setHasVotedInActivePoll] = useState<boolean>(false);
   const [tmodNeedsThemeAlert, setTmodNeedsThemeAlert] = useState<boolean>(false);
@@ -554,10 +550,6 @@ export default function MyJourney() {
       setCurrentOpenMeetingEndTime(null);
       setCurrentOpenMeetingMode(null);
     }
-    setMeetingAttendedCount(d.journey_stats.meeting_attended_count);
-    setRolesCompletedCount(d.journey_stats.roles_completed_count);
-    setSpeechesGivenCount(d.journey_stats.speeches_given_count);
-    setEvaluationsGivenCount(d.journey_stats.evaluations_given_count);
     setIsVPEForCurrentClub(d.is_vpe_for_club);
     setHasActivePoll(d.has_active_poll);
     setHasVotedInActivePoll(d.has_voted_in_active_poll);
@@ -1497,10 +1489,6 @@ export default function MyJourney() {
     router.push('/my-growth');
   }, [user?.currentClubId, user?.id, user?.fullName]);
 
-  const goToReportsSection = useCallback(() => {
-    router.push({ pathname: '/(tabs)/meetings', params: { section: 'reports' } });
-  }, []);
-
   const handlePreparedSpeechesPress = useCallback(() => {
     if (!currentOpenMeetingId) {
       Alert.alert('No open meeting', 'There is no current open meeting for prepared speeches.');
@@ -2253,52 +2241,6 @@ export default function MyJourney() {
                 </View>
               </TouchableOpacity>
 
-              <View style={[styles.masterBoxDivider, { backgroundColor: N.border }]} />
-              <TouchableOpacity
-                style={styles.journeySectionHeader}
-                onPress={() => router.push('/(tabs)/club')}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.journeySectionHeaderText, { color: theme.colors.textSecondary }]} maxFontSizeMultiplier={1.3}>
-                  Your Toastmasters Journey
-                </Text>
-                <ChevronRight size={18} color={theme.colors.textSecondary} />
-              </TouchableOpacity>
-              {/* Stats - clean Apple-style 2x2 grid */}
-              <View style={styles.masterStatsGrid}>
-                <View style={styles.masterStatsRow}>
-                  <TouchableOpacity style={styles.masterStatsCell} onPress={goToReportsSection} activeOpacity={0.75}>
-                    <Text style={[styles.masterStatsNumber, { color: theme.colors.text }]} maxFontSizeMultiplier={1.2}>
-                      {meetingAttendedCount}
-                    </Text>
-                    <Text style={[styles.masterStatsLabel, { color: theme.colors.textSecondary }]} maxFontSizeMultiplier={1.2}>Meeting attended</Text>
-                  </TouchableOpacity>
-                  <View style={[styles.masterStatsVDivider, { backgroundColor: theme.colors.border }]} />
-                  <TouchableOpacity style={styles.masterStatsCell} onPress={goToReportsSection} activeOpacity={0.75}>
-                    <Text style={[styles.masterStatsNumber, { color: theme.colors.text }]} maxFontSizeMultiplier={1.2}>
-                      {speechesGivenCount}
-                    </Text>
-                    <Text style={[styles.masterStatsLabel, { color: theme.colors.textSecondary }]} maxFontSizeMultiplier={1.2}>Speeches Given</Text>
-                  </TouchableOpacity>
-                </View>
-                <View style={[styles.masterStatsHDivider, { backgroundColor: theme.colors.border }]} />
-                <View style={styles.masterStatsRow}>
-                  <TouchableOpacity style={styles.masterStatsCell} onPress={goToReportsSection} activeOpacity={0.75}>
-                    <Text style={[styles.masterStatsNumber, { color: theme.colors.text }]} maxFontSizeMultiplier={1.2}>
-                      {rolesCompletedCount}
-                    </Text>
-                    <Text style={[styles.masterStatsLabel, { color: theme.colors.textSecondary }]} maxFontSizeMultiplier={1.2}>Roles completed</Text>
-                  </TouchableOpacity>
-                  <View style={[styles.masterStatsVDivider, { backgroundColor: theme.colors.border }]} />
-                  <TouchableOpacity style={styles.masterStatsCell} onPress={goToReportsSection} activeOpacity={0.75}>
-                    <Text style={[styles.masterStatsNumber, { color: theme.colors.text }]} maxFontSizeMultiplier={1.2}>
-                      {evaluationsGivenCount}
-                    </Text>
-                    <Text style={[styles.masterStatsLabel, { color: theme.colors.textSecondary }]} maxFontSizeMultiplier={1.2}>Evaluation given</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-
             </View>
           </>
         )}
@@ -2730,35 +2672,6 @@ const styles = StyleSheet.create({
     height: 1,
     marginVertical: 18,
   },
-  masterStatsGrid: {
-    paddingVertical: 4,
-  },
-  masterStatsRow: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
-  },
-  masterStatsCell: {
-    flex: 1,
-    paddingVertical: 16,
-    paddingHorizontal: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  masterStatsNumber: {
-    fontSize: 22,
-    fontWeight: '700',
-  },
-  masterStatsLabel: {
-    fontSize: 11,
-    fontWeight: '500',
-    marginTop: 4,
-  },
-  masterStatsVDivider: {
-    width: 1,
-  },
-  masterStatsHDivider: {
-    height: 1,
-  },
   journeyListCardsContainer: {
     width: '100%',
   },
@@ -2827,50 +2740,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     lineHeight: 14,
   },
-  journeySectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-    marginTop: 2,
-  },
-  journeySectionHeaderText: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
   vpeBellEmoji: {
     fontSize: 18,
-  },
-
-  statsGridSection: {
-    paddingHorizontal: 16,
-    marginTop: -4,
-    marginBottom: 6,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    gap: 10,
-  },
-  statsBox: {
-    width: '48%',
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 12,
-    alignItems: 'flex-start',
-  },
-  statsNumber: {
-    fontSize: 18,
-    fontWeight: '800',
-    lineHeight: 22,
-  },
-  statsLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    lineHeight: 14,
-    marginTop: 2,
   },
 
   meetingActionsCard: {
