@@ -14,13 +14,6 @@ const N = {
 
 const FS = 0.9;
 
-const SUMMARY_STATS: { value: string; label: string }[] = [
-  { value: '4', label: 'Info sections to complete' },
-  { value: '5', label: 'Audience types with visibility' },
-  { value: '1', label: 'Role that can edit — ExCom' },
-  { value: '∞', label: 'Members who benefit from updates' },
-];
-
 const AUDIENCE_CHIPS: { label: string; dot: string }[] = [
   { label: 'Members', dot: '#2563EB' },
   { label: 'ExCom Members', dot: '#7C3AED' },
@@ -124,18 +117,6 @@ export default function T360TrainingClubInfoAdminScreen() {
             <Text style={styles.kbBadgeText} maxFontSizeMultiplier={1.2}>
               T360 · Knowledge base
             </Text>
-          </View>
-          <View style={styles.statsRow}>
-            {SUMMARY_STATS.map((s) => (
-              <View key={s.label} style={styles.statCell}>
-                <Text style={styles.statValue} maxFontSizeMultiplier={1.2}>
-                  {s.value}
-                </Text>
-                <Text style={styles.statLabel} maxFontSizeMultiplier={1.1}>
-                  {s.label}
-                </Text>
-              </View>
-            ))}
           </View>
 
           <View style={styles.accessHeadRow}>
@@ -333,34 +314,6 @@ const styles = StyleSheet.create({
     fontSize: 12 * FS,
     fontWeight: '600',
     color: '#0369A1',
-  },
-  statsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 18,
-    gap: 8,
-  },
-  statCell: {
-    flexGrow: 1,
-    flexBasis: '45%',
-    minWidth: 140,
-    backgroundColor: 'rgba(55, 53, 47, 0.03)',
-    borderWidth: 1,
-    borderColor: N.border,
-    borderRadius: 12,
-    padding: 12,
-  },
-  statValue: {
-    fontSize: 22 * FS,
-    fontWeight: '800',
-    color: '#0369A1',
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 12 * FS,
-    lineHeight: 16 * FS,
-    color: N.textSecondary,
-    fontWeight: '600',
   },
   accessHeadRow: {
     flexDirection: 'row',
