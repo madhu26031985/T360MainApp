@@ -16,6 +16,7 @@ import {
   Settings,
   Shield,
   UserPlus,
+  Users,
   Vote,
 } from 'lucide-react-native';
 import { goBackOrReplace } from '@/lib/trainingBackNavigation';
@@ -158,6 +159,13 @@ export default function T360TrainingScreen() {
           description="Admin Panel — maintain official club details for members, guests, and the Club Tab."
           descriptionEmphasized
           onPress={() => router.push('/t360-training-club-info-admin')}
+        />
+        <TrainingRow
+          icon={<Users size={18} color="#5B21B6" strokeWidth={1.8} />}
+          title="Club ExComm"
+          description="Manage Executive Committee roles, assignments, and terms for your club."
+          descriptionEmphasized
+          onPress={() => router.push('/t360-training-club-excomm')}
         />
         <TrainingRow
           icon={<Shield size={18} color="#7F1D1D" strokeWidth={1.8} />}
