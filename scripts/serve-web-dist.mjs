@@ -135,5 +135,6 @@ server.listen(PORT, "127.0.0.1", () => {
   console.log(`Web preview (production-style /weblogin):`);
   console.log(`  ${base}/weblogin/`);
   console.log(`  ${base}/weblogin/t360-training-excomm-create-club`);
+  console.log(`  ${base}/weblogin/t360-training-excomm-manage-club-members`);
   console.log("");
 });

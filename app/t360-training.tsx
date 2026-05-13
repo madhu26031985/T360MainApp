@@ -15,6 +15,7 @@ import {
   ListChecks,
   Settings,
   Shield,
+  UserCog,
   UserPlus,
   Users,
   Vote,
@@ -103,6 +104,13 @@ export default function T360TrainingScreen() {
           description="Knowledge base: who can invite, roles, sending invites, and what invitees do next."
           descriptionEmphasized
           onPress={() => router.push('/t360-training-excomm-invite-members')}
+        />
+        <TrainingRow
+          icon={<UserCog size={18} color="#0369A1" strokeWidth={1.8} />}
+          title="Manage Club Members"
+          description="Knowledge base: roles, removals, accurate records, and FAQs for ExCom."
+          descriptionEmphasized
+          onPress={() => router.push('/t360-training-excomm-manage-club-members')}
         />
         <TrainingRow
           icon={<Calendar size={18} color="#0EA5E9" strokeWidth={1.8} />}
