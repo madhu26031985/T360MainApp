@@ -54,8 +54,6 @@ export default function MeetingOGHead({
     ensureMetaTag('og:title', `${safeClubName} - Meeting ${safeMeetingNo}`);
     ensureMetaTag('og:description', `${safeDate} • ${safeTime}`);
     ensureMetaTag('og:url', safePageUrl);
-    ensureMetaTag('og:site_name', 'T-360');
-    ensureMetaTag('og:locale', 'en_IN');
     ensureMetaTag('og:image', ogImageUrl);
     ensureMetaTag('og:image:secure_url', ogImageUrl);
     ensureMetaTag('og:image:type', 'image/png');
