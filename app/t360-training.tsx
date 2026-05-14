@@ -8,7 +8,6 @@ import {
   Calendar,
   CalendarDays,
   ChevronRight,
-  GraduationCap,
   Home,
   Info,
   Landmark,
@@ -16,6 +15,7 @@ import {
   Settings,
   Shield,
   UserCog,
+  UserCheck,
   UserPlus,
   Users,
   Vote,
@@ -120,6 +120,13 @@ export default function T360TrainingScreen() {
           onPress={() => router.push('/t360-training-excomm-manage-meetings')}
         />
         <TrainingRow
+          icon={<UserCheck size={18} color="#15803D" strokeWidth={1.8} />}
+          title="Book a Role"
+          description="Knowledge base: Open, Mine, and Taken sections; how to book; after booking; FAQs."
+          descriptionEmphasized
+          onPress={() => router.push('/t360-training-book-a-role')}
+        />
+        <TrainingRow
           icon={<ListChecks size={18} color="#D97706" strokeWidth={1.8} />}
           title="Agenda creation"
           description="Create, customize, manage, and share meeting agendas with ease."
@@ -132,13 +139,6 @@ export default function T360TrainingScreen() {
           description="Fair, structured, anonymous voting from poll creation to results."
           descriptionEmphasized
           onPress={() => router.push('/t360-training-excomm-voting-operations')}
-        />
-        <TrainingRow
-          icon={<GraduationCap size={18} color="#7C3AED" strokeWidth={1.8} />}
-          title="Role Booking"
-          description="Book meeting roles easily and participate actively in club meetings."
-          descriptionEmphasized
-          onPress={() => router.push('/t360-training-role-booking')}
         />
         <TrainingRow
           icon={<Home size={18} color="#0D9488" strokeWidth={1.8} />}
