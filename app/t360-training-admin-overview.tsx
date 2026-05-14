@@ -262,7 +262,7 @@ export default function T360TrainingAdminOverviewScreen() {
           </Text>
 
           <Text style={styles.featureHeading} maxFontSizeMultiplier={1.25}>
-            📅 Manage Meetings
+            📅 Create & Manage Meeting
           </Text>
           <Text style={styles.body} maxFontSizeMultiplier={1.25}>
             Create and manage club meetings with ease.

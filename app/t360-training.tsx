@@ -114,8 +114,8 @@ export default function T360TrainingScreen() {
         />
         <TrainingRow
           icon={<Calendar size={18} color="#0EA5E9" strokeWidth={1.8} />}
-          title="Manage Meetings"
-          description="Create, edit, close, and reopen meetings."
+          title="Create & Manage Meeting"
+          description="Knowledge base: create, edit, modes, statuses, open limit, visibility, roles, and FAQs for ExCom."
           descriptionEmphasized
           onPress={() => router.push('/t360-training-excomm-manage-meetings')}
         />
