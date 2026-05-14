@@ -68,6 +68,25 @@ export type PublicAgendaFetchResult =
   | { ok: true; data: PublicAgendaPayload }
   | { ok: false; code: PublicAgendaErrorCode; message: string };
 
+/** Non–role-based agenda rows that should show the same assignee as Toastmaster of the Day. */
+const TMOD_PLACEHOLDER_SECTION_NAMES = new Set(['TMOD continues with theme', 'TMOD closing section']);
+
+/**
+ * Public RPC returns empty assigned_user_name for TMOD placeholder sections; copy from the
+ * visible "Toastmaster of the Day" row when present (matches in-app agenda behaviour).
+ */
+function inheritToastmasterAssigneeOnPublicAgenda(items: PublicAgendaItemRow[]): PublicAgendaItemRow[] {
+  const tmodItem = items.find((it) => (it.section_name || '').toLowerCase().includes('toastmaster of the day'));
+  const tmodName = (tmodItem?.assigned_user_name || '').trim();
+  if (!tmodName) return items;
+  return items.map((it) => {
+    const sec = (it.section_name || '').trim();
+    if (!TMOD_PLACEHOLDER_SECTION_NAMES.has(sec)) return it;
+    if ((it.assigned_user_name || '').trim()) return it;
+    return { ...it, assigned_user_name: tmodName };
+  });
+}
+
 /** RPC ignores club/meeting path segments; placeholders satisfy the signature. */
 const PUBLIC_AGENDA_RPC_PLACEHOLDER_CLUB_ID = '00000000-0000-0000-0000-000000000000';
 
@@ -195,5 +214,6 @@ export async function fetchPublicMeetingAgenda(params: {
         )
       : null,
   };
-  return { ok: true, data: { meeting, club, items } };
+  const itemsWithTmod = inheritToastmasterAssigneeOnPublicAgenda(items);
+  return { ok: true, data: { meeting, club, items: itemsWithTmod } };
 }
