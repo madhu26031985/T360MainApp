@@ -67,6 +67,7 @@ function AppContent() {
         <Stack.Screen name="t360-training-excomm-manage-club-members" options={{ headerShown: false }} />
         <Stack.Screen name="t360-training-excomm-manage-meetings" options={{ headerShown: false }} />
         <Stack.Screen name="t360-training-excomm-agenda-creation" options={{ headerShown: false }} />
+        <Stack.Screen name="t360-training-table-topic-master" options={{ headerShown: false }} />
         <Stack.Screen name="t360-training-excomm-voting-operations" options={{ headerShown: false }} />
         <Stack.Screen name="t360-training-book-a-role" options={{ headerShown: false }} />
         <Stack.Screen name="t360-training-toastmaster-of-the-day" options={{ headerShown: false }} />

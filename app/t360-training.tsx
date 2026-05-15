@@ -14,6 +14,7 @@ import {
   Info,
   Landmark,
   ListChecks,
+  MessageSquare,
   Mic2,
   Settings,
   Sparkles,
@@ -160,10 +161,17 @@ export default function T360TrainingScreen() {
         />
         <TrainingRow
           icon={<ListChecks size={18} color="#D97706" strokeWidth={1.8} />}
-          title="Agenda creation"
-          description="Create, customize, manage, and share meeting agendas with ease."
+          title="Agenda Creation"
+          description="Knowledge base: Agenda Creator—visibility, layouts, auto fill, sharing, live updates, and FAQs for ExComm."
           descriptionEmphasized
           onPress={() => router.push('/t360-training-excomm-agenda-creation')}
+        />
+        <TrainingRow
+          icon={<MessageSquare size={18} color="#0F766E" strokeWidth={1.8} />}
+          title="Table Topic Master"
+          description="Knowledge base: book the role, Table Topic Corner & Summary, Eye toggle, club question repository, and digital workflow."
+          descriptionEmphasized
+          onPress={() => router.push('/t360-training-table-topic-master')}
         />
         <TrainingRow
           icon={<Vote size={18} color="#7C3AED" strokeWidth={1.8} />}
