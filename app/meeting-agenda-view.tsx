@@ -10,6 +10,7 @@ import {
   Image,
   Linking,
   Platform,
+  useWindowDimensions,
   type ImageStyle,
   type StyleProp,
   type TextStyle,
@@ -581,12 +582,20 @@ export function MeetingAgendaViewContent({
   embedded?: boolean;
 }) {
   const { theme } = useTheme();
+  const { width: windowWidth } = useWindowDimensions();
+  const headerTitleCompact = windowWidth < 520;
   const { user } = useAuth();
   const preparedSpeakersViewerOpts: PreparedSpeakersDisplayOpts = {
     viewerId: user?.id ?? null,
     viewerAvatarUrl: user?.avatarUrl ?? null,
   };
   const meetingId = meetingIdProp;
+
+  const headerTitleTextStyle = [
+    styles.headerTitle,
+    headerTitleCompact && styles.headerTitleCompact,
+    { color: theme.colors.text },
+  ];
 
   const [meeting, setMeeting] = useState<Meeting | null>(null);
   const [clubInfo, setClubInfo] = useState<ClubInfo | null>(null);
@@ -1028,7 +1037,15 @@ export function MeetingAgendaViewContent({
               <ChevronLeft size={24} color={theme.colors.text} />
             </TouchableOpacity>
           )}
-          <Text style={[styles.headerTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3}>Meeting Agenda</Text>
+          <Text
+            style={headerTitleTextStyle}
+            maxFontSizeMultiplier={1.15}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.85}
+          >
+            Meeting Agenda
+          </Text>
           <View style={{ width: 40 }} />
         </View>
         <View style={styles.errorContainer}>
@@ -1054,7 +1071,13 @@ export function MeetingAgendaViewContent({
               <ChevronLeft size={24} color={theme.colors.text} />
             </TouchableOpacity>
           )}
-          <Text style={[styles.headerTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3}>
+          <Text
+            style={headerTitleTextStyle}
+            maxFontSizeMultiplier={1.15}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.85}
+          >
             Meeting Agenda
           </Text>
           <View style={{ width: 40 }} />
@@ -1083,7 +1106,15 @@ export function MeetingAgendaViewContent({
             <ChevronLeft size={24} color={theme.colors.text} />
           </TouchableOpacity>
         )}
-        <Text style={[styles.headerTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3}>Meeting Agenda</Text>
+        <Text
+          style={headerTitleTextStyle}
+          maxFontSizeMultiplier={1.15}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.85}
+        >
+          Meeting Agenda
+        </Text>
         <View style={styles.headerActions}>
           {meeting && (isExcomm || meeting.is_agenda_visible !== false) && (
             <TouchableOpacity
@@ -1118,12 +1149,24 @@ export function MeetingAgendaViewContent({
                 pathname: '/admin/agenda-editor',
                 params: { meetingId }
               })}
-              style={[styles.headerEditAgendaButton, { borderColor: theme.colors.primary }]}
+              style={[
+                styles.headerEditAgendaButton,
+                headerTitleCompact && styles.headerEditAgendaButtonCompact,
+                { borderColor: theme.colors.primary },
+              ]}
               accessibilityLabel="Edit Agenda"
               accessibilityRole="button"
             >
-              <Edit3 size={18} color={theme.colors.primary} strokeWidth={2} />
-              <Text style={[styles.headerEditAgendaText, { color: theme.colors.primary }]} maxFontSizeMultiplier={1.2}>
+              <Edit3 size={headerTitleCompact ? 16 : 18} color={theme.colors.primary} strokeWidth={2} />
+              <Text
+                style={[
+                  styles.headerEditAgendaText,
+                  headerTitleCompact && styles.headerEditAgendaTextCompact,
+                  { color: theme.colors.primary },
+                ]}
+                maxFontSizeMultiplier={1.15}
+                numberOfLines={1}
+              >
                 Edit Agenda
               </Text>
             </TouchableOpacity>
@@ -2245,18 +2288,24 @@ const styles = StyleSheet.create({
   },
   backButton: {
     padding: 8,
+    flexShrink: 0,
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
     flex: 1,
+    minWidth: 0,
     textAlign: 'center',
+  },
+  headerTitleCompact: {
+    fontSize: 14,
+    letterSpacing: -0.2,
   },
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    minWidth: 40,
+    flexShrink: 0,
     justifyContent: 'flex-end',
   },
   headerButton: {
@@ -2274,6 +2323,13 @@ const styles = StyleSheet.create({
   headerEditAgendaText: {
     fontSize: 14,
     fontWeight: '600',
+  },
+  headerEditAgendaButtonCompact: {
+    paddingHorizontal: 8,
+    gap: 4,
+  },
+  headerEditAgendaTextCompact: {
+    fontSize: 12,
   },
   content: {
     flex: 1,
