@@ -9,6 +9,7 @@ import {
   Alert,
   Image,
   Linking,
+  Modal,
   Platform,
   type ImageStyle,
   type StyleProp,
@@ -21,7 +22,8 @@ import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { ChevronLeft, Calendar, Clock, MapPin, Sparkles, Edit3, Compass, FileText, CheckCircle2, Download, Users, Home, Shield, Settings } from 'lucide-react-native';
+import { ChevronLeft, Calendar, Clock, MapPin, Sparkles, Edit3, Compass, FileText, CheckCircle2, Download, Users, Home, Shield, Settings, Info, X } from 'lucide-react-native';
+import { AgendaCreatorKnowledgeBaseContent } from '@/components/AgendaCreatorKnowledgeBaseContent';
 import { exportAgendaToPDF, generatePDFFilename } from '@/lib/pdfExportUtils';
 import { parseMemberPreparedAgenda } from '@/lib/preparedSpeechesAgendaParse';
 import {
@@ -598,6 +600,7 @@ export function MeetingAgendaViewContent({
   const [isExcomm, setIsExcomm] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
+  const [agendaKbVisible, setAgendaKbVisible] = useState(false);
   const isInitialMount = useRef(true);
 
   useEffect(() => {
@@ -1085,6 +1088,16 @@ export function MeetingAgendaViewContent({
         )}
         <Text style={[styles.headerTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3}>Meeting Agenda</Text>
         <View style={styles.headerActions}>
+          {meeting && (isExcomm || meeting.is_agenda_visible !== false) && (
+            <TouchableOpacity
+              onPress={() => setAgendaKbVisible(true)}
+              style={styles.headerButton}
+              accessibilityLabel="Agenda Creator help"
+              accessibilityRole="button"
+            >
+              <Info size={20} color={theme.colors.primary} />
+            </TouchableOpacity>
+          )}
           {/* Web-only PDF export: same audience as agenda body (members when visible; ExComm even when draft). */}
           {Platform.OS === 'web' &&
             meeting &&
@@ -1108,9 +1121,14 @@ export function MeetingAgendaViewContent({
                 pathname: '/admin/agenda-editor',
                 params: { meetingId }
               })}
-              style={styles.headerButton}
+              style={[styles.headerEditAgendaButton, { borderColor: theme.colors.primary }]}
+              accessibilityLabel="Edit Agenda"
+              accessibilityRole="button"
             >
-              <Edit3 size={20} color={theme.colors.primary} />
+              <Edit3 size={18} color={theme.colors.primary} strokeWidth={2} />
+              <Text style={[styles.headerEditAgendaText, { color: theme.colors.primary }]} maxFontSizeMultiplier={1.2}>
+                Edit Agenda
+              </Text>
             </TouchableOpacity>
           )}
         </View>
@@ -2150,6 +2168,39 @@ export function MeetingAgendaViewContent({
         </View>
       )}
 
+      <Modal
+        visible={agendaKbVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setAgendaKbVisible(false)}
+      >
+        <View style={styles.agendaKbOverlay}>
+          <View style={[styles.agendaKbSheet, { backgroundColor: theme.colors.background }]}>
+            <View style={[styles.agendaKbHeader, { borderBottomColor: theme.colors.border }]}>
+              <Text style={[styles.agendaKbHeaderTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3}>
+                Agenda Creator
+              </Text>
+              <TouchableOpacity
+                onPress={() => setAgendaKbVisible(false)}
+                style={styles.agendaKbClose}
+                accessibilityLabel="Close help"
+                accessibilityRole="button"
+              >
+                <X size={22} color={theme.colors.text} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView
+              style={styles.agendaKbScroll}
+              contentContainerStyle={styles.agendaKbScrollContent}
+              showsVerticalScrollIndicator
+              keyboardShouldPersistTaps="handled"
+            >
+              <AgendaCreatorKnowledgeBaseContent />
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
       {/* Export Progress Overlay */}
       {isExporting && (
         <View style={styles.exportOverlay}>
@@ -2239,12 +2290,65 @@ const styles = StyleSheet.create({
   },
   headerActions: {
     flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
     minWidth: 40,
     justifyContent: 'flex-end',
   },
   headerButton: {
     padding: 8,
+  },
+  headerEditAgendaButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderRadius: 8,
+  },
+  headerEditAgendaText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  agendaKbOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    justifyContent: 'flex-end',
+  },
+  agendaKbSheet: {
+    flex: 1,
+    maxHeight: '92%',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    overflow: 'hidden',
+    ...Platform.select({
+      web: { maxWidth: 560, width: '100%', alignSelf: 'center' },
+    }),
+  },
+  agendaKbHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  agendaKbHeaderTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    flex: 1,
+  },
+  agendaKbClose: {
+    padding: 8,
+    marginRight: -8,
+  },
+  agendaKbScroll: {
+    flex: 1,
+  },
+  agendaKbScrollContent: {
+    padding: 16,
+    paddingBottom: 32,
   },
   content: {
     flex: 1,
