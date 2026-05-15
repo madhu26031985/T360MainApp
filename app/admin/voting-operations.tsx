@@ -22,7 +22,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { EXCOMM_UI } from '@/lib/excommUiTokens';
 import { buildPublicVoteUrl } from '@/lib/publicVoteLinks';
-import { ArrowLeft, Plus, Vote, Calendar, Users, X, Save, Trash2, ChartBar as BarChart3, Building2, Crown, User, Shield, Eye, UserCheck, Search, Sparkles, Share2 } from 'lucide-react-native';
+import { ArrowLeft, Plus, Vote, Calendar, Users, X, Save, Trash2, ChartBar as BarChart3, Building2, Crown, User, Shield, Eye, UserCheck, Search, Sparkles, Share2, Info } from 'lucide-react-native';
 
 /** Notion-like palette: flat surfaces, hairline borders, muted text, accent blue (aligned with Book a Role primary chips). */
 const N = {
@@ -897,7 +897,14 @@ export default function VotingOperations() {
           <ArrowLeft size={22} color={N.iconMuted} strokeWidth={2} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: N.text }]} maxFontSizeMultiplier={1.3}>Voting Operations</Text>
-        <View style={styles.headerSpacer} />
+        <TouchableOpacity
+          style={styles.headerHelpButton}
+          onPress={() => router.push('/t360-training-excomm-voting-operations')}
+          accessibilityLabel="Voting Operations help"
+          accessibilityRole="button"
+        >
+          <Info size={20} color={N.accent} />
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
@@ -1522,8 +1529,11 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     letterSpacing: -0.2,
   },
-  headerSpacer: {
+  headerHelpButton: {
     width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   content: {
     flex: 1,

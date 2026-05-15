@@ -36,6 +36,7 @@ import {
   Users,
   Vote,
   X,
+  Info,
 } from 'lucide-react-native';
 import { Image } from 'expo-image';
 import { avatarUrlForDisplay } from '@/lib/avatarDisplayUrl';
@@ -623,7 +624,14 @@ export default function ToastmasterCorner() {
           <ArrowLeft size={24} color={theme.colors.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3}>TM Corner</Text>
-        <View style={styles.headerSpacer} />
+        <TouchableOpacity
+          style={styles.headerHelpButton}
+          onPress={() => router.push('/t360-training-toastmaster-of-the-day')}
+          accessibilityLabel="Toastmaster of the Day help"
+          accessibilityRole="button"
+        >
+          <Info size={20} color={theme.colors.primary} />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.mainBody}>
@@ -1247,8 +1255,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     letterSpacing: 0.2,
   },
-  headerSpacer: {
+  headerHelpButton: {
     width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   content: {
     flex: 1,

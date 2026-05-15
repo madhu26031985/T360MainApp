@@ -19,7 +19,7 @@ import {
   fetchLiveVotingSnapshot,
   getCachedLiveVotingSnapshot,
 } from '@/lib/liveVotingSnapshot';
-import { ArrowLeft, Vote, CircleCheck as CheckCircle, User, Home, Users, Calendar, Settings, Shield } from 'lucide-react-native';
+import { ArrowLeft, Vote, CircleCheck as CheckCircle, User, Home, Users, Calendar, Settings, Shield, Info } from 'lucide-react-native';
 import ClubSwitcher from '@/components/ClubSwitcher';
 
 /** Notion-style neutrals (no red required badge; muted live state) */
@@ -337,7 +337,14 @@ export default function LiveVoting() {
         <Text style={[styles.headerTitle, { color: N.text }]} maxFontSizeMultiplier={1.3}>
           Live voting
         </Text>
-        <View style={styles.headerSpacer} />
+        <TouchableOpacity
+          style={styles.headerHelpButton}
+          onPress={() => router.push('/t360-training-excomm-voting-operations')}
+          accessibilityLabel="Voting Operations help"
+          accessibilityRole="button"
+        >
+          <Info size={20} color={N.accent} />
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -696,8 +703,11 @@ const styles = StyleSheet.create({
     marginHorizontal: 12,
     letterSpacing: -0.2,
   },
-  headerSpacer: {
+  headerHelpButton: {
     width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   content: {
     flex: 1,

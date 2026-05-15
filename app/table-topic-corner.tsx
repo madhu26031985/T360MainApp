@@ -52,6 +52,7 @@ import {
   Eye,
   EyeOff,
   Save,
+  Info,
 } from 'lucide-react-native';
 
 const FOOTER_NAV_ICON_SIZE = 15;
@@ -1715,7 +1716,14 @@ export default function TableTopicCorner(): JSX.Element {
         <Text style={[styles.headerTitle, notionType, { color: notion.text }]} maxFontSizeMultiplier={1.3}>
           Table Topic Corner
         </Text>
-        <View style={styles.headerSpacer} />
+        <TouchableOpacity
+          style={styles.headerHelpButton}
+          onPress={() => router.push('/t360-training-table-topic-master')}
+          accessibilityLabel="Table Topic Master help"
+          accessibilityRole="button"
+        >
+          <Info size={20} color={NOTION_ACCENT} />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.mainBody}>
@@ -2827,8 +2835,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     flex: 1,
   },
-  headerSpacer: {
+  headerHelpButton: {
     width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
   },
   content: {
     flex: 1,

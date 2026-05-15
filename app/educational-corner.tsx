@@ -47,6 +47,7 @@ import {
   Users,
   Vote,
   X,
+  Info,
 } from 'lucide-react-native';
 
 /** Match Toastmaster Corner bottom dock icon size */
@@ -475,7 +476,14 @@ export default function EducationalCorner(): JSX.Element {
           <Text style={[styles.headerTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3}>
             Educational Corner
           </Text>
-          <View style={styles.headerSpacer} />
+          <TouchableOpacity
+            style={styles.headerHelpButton}
+            onPress={() => router.push('/t360-training-educational-speaker-role')}
+            accessibilityLabel="Educational Speaker help"
+            accessibilityRole="button"
+          >
+            <Info size={20} color={theme.colors.primary} />
+          </TouchableOpacity>
         </View>
         <View style={styles.loadingContainer}>
           <Text style={[styles.loadingText, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3}>
@@ -523,7 +531,14 @@ export default function EducationalCorner(): JSX.Element {
         <Text style={[styles.headerTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3}>
           Educational Corner
         </Text>
-        <View style={styles.headerSpacer} />
+        <TouchableOpacity
+          style={styles.headerHelpButton}
+          onPress={() => router.push('/t360-training-educational-speaker-role')}
+          accessibilityLabel="Educational Speaker help"
+          accessibilityRole="button"
+        >
+          <Info size={20} color={theme.colors.primary} />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.mainBody}>
@@ -1141,8 +1156,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     letterSpacing: 0.2,
   },
-  headerSpacer: {
+  headerHelpButton: {
     width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   content: {
     flex: 1,

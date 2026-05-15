@@ -16,7 +16,7 @@ import {
 } from '@/lib/generalEvaluatorReportQuery';
 import { GENERAL_EVALUATOR_REPORT_SNAPSHOT_STALE_MS } from '@/lib/prefetchGeneralEvaluatorReport';
 import { getRoleColor, formatRole } from '@/lib/roleUtils';
-import { ArrowLeft, Calendar, Star, X, NotebookPen, FileText, Users, RotateCcw, ClipboardCheck, Search, Vote } from 'lucide-react-native';
+import { ArrowLeft, Calendar, Star, X, NotebookPen, FileText, Users, RotateCcw, ClipboardCheck, Search, Vote, Info } from 'lucide-react-native';
 import { Crown, User, Shield, Eye, EyeOff, UserCheck } from 'lucide-react-native';
 import { initialsFromName, useShouldLoadNetworkAvatars } from '@/lib/networkAvatarPolicy';
 
@@ -1102,7 +1102,14 @@ export default function GeneralEvaluatorReport() {
           <ArrowLeft size={24} color={notion.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, notionType, { color: notion.text }]} maxFontSizeMultiplier={1.3}>General Evaluator Report</Text>
-        <View style={styles.infoButton} />
+        <TouchableOpacity
+          style={styles.infoButton}
+          onPress={() => router.push('/t360-training-general-evaluator-role')}
+          accessibilityLabel="General Evaluator help"
+          accessibilityRole="button"
+        >
+          <Info size={20} color={NOTION_ACCENT} />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.mainBody}>
@@ -1711,7 +1718,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   infoButton: {
-    padding: 8,
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginLeft: 8,
   },
   headerActions: {
