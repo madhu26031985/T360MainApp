@@ -95,6 +95,14 @@ const N = {
 
 const ROLE_PLAYER_CONGRATS_STORAGE_PREFIX = 'journey_role_player_congrats_ack_v1_';
 
+/** Supabase reuses `channel(topic)`; a counter resets when Home remounts → same `-v1` topic while the old channel is still subscribed. */
+function journeyRealtimeUniqueSuffix(): string {
+  if (typeof globalThis !== 'undefined' && typeof globalThis.crypto?.randomUUID === 'function') {
+    return globalThis.crypto.randomUUID();
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+}
+
 const ROLE_PLAYER_CONGRATS_TEMPLATES = [
   '{name}, great step forward in your Toastmasters journey!',
   '{name}, well done on taking the stage—keep shining!',
@@ -740,8 +748,9 @@ export default function MyJourney() {
 
   useEffect(() => {
     if (!user?.currentClubId) return;
+    const channelName = `journey-open-meeting-${user.currentClubId}-${journeyRealtimeUniqueSuffix()}`;
     const meetingChannel = supabase
-      .channel(`journey-open-meeting-${user.currentClubId}`)
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -757,16 +766,16 @@ export default function MyJourney() {
       .subscribe();
 
     return () => {
-      void meetingChannel.unsubscribe();
-      supabase.removeChannel(meetingChannel);
+      void supabase.removeChannel(meetingChannel);
     };
   }, [user?.currentClubId]);
 
   useEffect(() => {
     if (!user?.currentClubId || !user?.id) return;
 
+    const runId = journeyRealtimeUniqueSuffix();
     const channelPolls = supabase
-      .channel('journey-polls')
+      .channel(`journey-polls-${user.currentClubId}-${user.id}-${runId}-a`)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
@@ -781,7 +790,7 @@ export default function MyJourney() {
       .subscribe();
 
     const channelVotes = supabase
-      .channel('journey-votes')
+      .channel(`journey-votes-${user.currentClubId}-${user.id}-${runId}-b`)
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
@@ -793,8 +802,8 @@ export default function MyJourney() {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channelPolls);
-      supabase.removeChannel(channelVotes);
+      void supabase.removeChannel(channelPolls);
+      void supabase.removeChannel(channelVotes);
     };
   }, [user?.currentClubId, user?.id, refetchJourneyHome]);
 
@@ -1136,7 +1145,7 @@ export default function MyJourney() {
     const meetingId = currentOpenMeetingId;
     const uid = user.id;
     const channel = supabase
-      .channel(`journey-live-task-flags-${meetingId}-${uid}`)
+      .channel(`journey-live-task-flags-${meetingId}-${uid}-${journeyRealtimeUniqueSuffix()}`)
       .on(
         'postgres_changes',
         {
@@ -1162,7 +1171,7 @@ export default function MyJourney() {
     return () => {
       cancelled = true;
       clearInterval(intervalId);
-      supabase.removeChannel(channel);
+      void supabase.removeChannel(channel);
     };
   }, [currentOpenMeetingId, user?.id, isOpenMeetingLiveNow, refreshJourneyLiveTaskFlags]);
 

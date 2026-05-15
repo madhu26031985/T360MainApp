@@ -561,23 +561,27 @@ function meetingDateRangeRollingDays(daysBack: number): { from: string; to: stri
 async function countThemesForMeetings(clubId: string, meetingIds: string[]): Promise<number> {
   if (meetingIds.length === 0) return 0;
   const CHUNK = 100;
-  let total = 0;
+  const chunks: string[][] = [];
   for (let i = 0; i < meetingIds.length; i += CHUNK) {
-    const chunk = meetingIds.slice(i, i + CHUNK);
-    const { count, error } = await supabase
-      .from('toastmaster_meeting_data')
-      .select('id', { count: 'exact', head: true })
-      .eq('club_id', clubId)
-      .in('meeting_id', chunk)
-      .not('theme_of_the_day', 'is', null)
-      .neq('theme_of_the_day', '');
-    if (error) {
-      console.warn('Club stats theme count:', error.message);
-      continue;
-    }
-    total += count ?? 0;
+    chunks.push(meetingIds.slice(i, i + CHUNK));
   }
-  return total;
+  const counts = await Promise.all(
+    chunks.map(async (chunk) => {
+      const { count, error } = await supabase
+        .from('toastmaster_meeting_data')
+        .select('id', { count: 'exact', head: true })
+        .eq('club_id', clubId)
+        .in('meeting_id', chunk)
+        .not('theme_of_the_day', 'is', null)
+        .neq('theme_of_the_day', '');
+      if (error) {
+        console.warn('Club stats theme count:', error.message);
+        return 0;
+      }
+      return count ?? 0;
+    })
+  );
+  return counts.reduce((a, b) => a + b, 0);
 }
 
 /** Club-wide counts from completed roles / meetings in the rolling last `daysBack` calendar days. */
@@ -1487,12 +1491,15 @@ async function fetchEducationalSpeechesDeliveredLast6Months(
     const meetingDateStart = formatLocalYmd(start);
     const meetingDateEnd = formatLocalYmd(end);
 
+    // Carousels only show ~40 rows; unbounded meeting lists + 80-id chunking caused hundreds of requests on seeded clubs.
     const { data: meetingsInRange, error: mErr } = await supabase
       .from('app_club_meeting')
       .select('id, meeting_date')
       .eq('club_id', clubId)
       .gte('meeting_date', meetingDateStart)
-      .lte('meeting_date', meetingDateEnd);
+      .lte('meeting_date', meetingDateEnd)
+      .order('meeting_date', { ascending: false })
+      .limit(260);
 
     if (mErr) {
       console.warn('Educational speeches: meetings', mErr.message);
@@ -1590,7 +1597,9 @@ async function fetchToastmasterThemesDeliveredLast6Months(
       .select('id, meeting_date')
       .eq('club_id', clubId)
       .gte('meeting_date', meetingDateStart)
-      .lte('meeting_date', meetingDateEnd);
+      .lte('meeting_date', meetingDateEnd)
+      .order('meeting_date', { ascending: false })
+      .limit(260);
 
     if (mErr) {
       console.warn('Toastmaster themes: meetings', mErr.message);
@@ -1721,7 +1730,9 @@ async function fetchPreparedSpeechesDeliveredLast6Months(
       .select('id, meeting_date')
       .eq('club_id', clubId)
       .gte('meeting_date', meetingDateStart)
-      .lte('meeting_date', meetingDateEnd);
+      .lte('meeting_date', meetingDateEnd)
+      .order('meeting_date', { ascending: false })
+      .limit(260);
 
     if (mErr) {
       console.warn('Prepared speeches: meetings', mErr.message);
@@ -3109,6 +3120,11 @@ export default function MyClub() {
           return;
         }
 
+        if (typeof __DEV__ !== 'undefined' && __DEV__) {
+          console.warn(
+            '[club] Secondary snapshot RPC unavailable; legacy loaders run (capped meeting lists). Ensure get_club_tab_secondary_snapshot exists in Supabase.'
+          );
+        }
         const [
           edSpeeches,
           tmThemes,
@@ -3215,11 +3231,16 @@ export default function MyClub() {
 
   useEffect(() => {
     const clubId = user?.currentClubId;
-    if (!clubId) return;
+    if (!clubId || !bundle) return;
     const warmStats = clubStatsByDays[clubStatsPeriodDays];
+    if (warmStats) {
+      setClubStats(warmStats);
+      setClubStatsLoading(false);
+      return;
+    }
     let cancelled = false;
     (async () => {
-      if (!warmStats) setClubStatsLoading(true);
+      setClubStatsLoading(true);
       try {
         const s = await fetchClubStatsRollingDays(clubId, clubStatsPeriodDays);
         if (!cancelled) {
@@ -3239,38 +3260,9 @@ export default function MyClub() {
     return () => {
       cancelled = true;
     };
-  }, [user?.currentClubId, clubStatsPeriodDays]);
-
-  useEffect(() => {
-    const clubId = user?.currentClubId;
-    if (!clubId) return;
-    let cancelled = false;
-    const missingDays = CLUB_STATS_PERIOD_OPTIONS.map((o) => o.days).filter((d) => !clubStatsByDays[d]);
-    if (!missingDays.length) return;
-
-    (async () => {
-      const results = await Promise.all(
-        missingDays.map(async (days) => {
-          try {
-            const s = await fetchClubStatsRollingDays(clubId, days);
-            return { days, stats: s };
-          } catch {
-            return { days, stats: emptyClubStats() };
-          }
-        })
-      );
-      if (cancelled) return;
-      setClubStatsByDays((prev) => {
-        const next = { ...prev };
-        for (const r of results) next[r.days] = r.stats;
-        return next;
-      });
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [user?.currentClubId]);
+    // Intentionally omit clubStatsByDays: adding it re-fetched whenever this effect populated the cache.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.currentClubId, clubStatsPeriodDays, bundle]);
 
   useEffect(() => {
     // Keep skeleton visible only when we truly have no data.

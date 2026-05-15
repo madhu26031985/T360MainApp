@@ -9,6 +9,12 @@ let nativeAvatarProbeValue: boolean | null = null;
 let nativeAvatarProbeAt = 0;
 let nativeAvatarProbeInFlight: Promise<boolean> | null = null;
 
+/** Web: dedupe favicon speed probe across every useShouldLoadNetworkAvatars() mount (Club tab had 6+ parallel probes). */
+let webAvatarProbeValue: boolean | null = null;
+let webAvatarProbeAt = 0;
+let webAvatarProbeInFlight: Promise<boolean> | null = null;
+const WEB_AVATAR_PROBE_TTL_MS = 30_000;
+
 type NavigatorConnectionLike = {
   effectiveType?: string;
   saveData?: boolean;
@@ -39,7 +45,7 @@ function getNavigatorConnection(): NavigatorConnectionLike | undefined {
   return nav.connection || nav.mozConnection || nav.webkitConnection;
 }
 
-async function runWebSpeedProbe(): Promise<boolean> {
+async function runWebSpeedProbeOnce(): Promise<boolean> {
   if (Platform.OS !== 'web' || typeof window === 'undefined' || typeof fetch === 'undefined') return true;
   const startedAt = Date.now();
   try {
@@ -51,6 +57,25 @@ async function runWebSpeedProbe(): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+async function getWebAvatarProbeDecision(): Promise<boolean> {
+  const now = Date.now();
+  if (webAvatarProbeValue !== null && now - webAvatarProbeAt < WEB_AVATAR_PROBE_TTL_MS) {
+    return webAvatarProbeValue;
+  }
+  if (!webAvatarProbeInFlight) {
+    webAvatarProbeInFlight = runWebSpeedProbeOnce()
+      .then((decision) => {
+        webAvatarProbeValue = decision;
+        webAvatarProbeAt = Date.now();
+        return decision;
+      })
+      .finally(() => {
+        webAvatarProbeInFlight = null;
+      });
+  }
+  return webAvatarProbeInFlight;
 }
 
 async function runNativeSpeedProbe(): Promise<boolean> {
@@ -115,7 +140,7 @@ export function useShouldLoadNetworkAvatars(): boolean {
         if (!cancelled) setShouldLoadAvatars(false);
         return;
       }
-      const probeAllowsAvatars = await runWebSpeedProbe();
+      const probeAllowsAvatars = await getWebAvatarProbeDecision();
       if (!cancelled) setShouldLoadAvatars(probeAllowsAvatars);
     };
 

@@ -292,7 +292,8 @@ export async function fetchClubLandingCritical(
 
   if (!opts?.bypassCache) {
     const persisted = await readPersistedCritical(clubId);
-    if (persisted && Date.now() - persisted.at < CACHE_TTL_MS) {
+    // Match readPersistedCritical TTL (12h): short CACHE_TTL_MS here forced a network RPC on almost every Club open.
+    if (persisted && Date.now() - persisted.at < PERSISTED_CACHE_TTL_MS) {
       cache = { clubId, at: persisted.at, data: persisted.data };
       return persisted.data;
     }
