@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useState, useEffect } from 'react';
 import { router } from 'expo-router';
 import Constants from 'expo-constants';
+import * as WebBrowser from 'expo-web-browser';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -43,6 +44,9 @@ const N = {
 /** User asked to keep sign-out and delete styling; keep these as-is. */
 const SIGN_OUT_BLUE = '#3b82f6';
 const DELETE_RED = '#ef4444';
+
+/** Official T360 LinkedIn profile — opens as a public page (no sign-in prompt). */
+const T360_LINKEDIN_PROFILE_URL = 'https://www.linkedin.com/in/madhu-sri-82a60b372';
 
 interface SettingItemProps {
   icon: React.ReactNode;
@@ -115,6 +119,35 @@ const showAlert = (
     Alert.alert(title, message, buttons);
   }
 };
+
+/**
+ * Opens the T360 LinkedIn profile without LinkedIn's in-app authwall.
+ * WebView / popup referrers often redirect to linkedin.com/authwall — use system browser + no referrer.
+ */
+async function openLinkedInProfile() {
+  const url = T360_LINKEDIN_PROFILE_URL;
+
+  if (Platform.OS === 'web' && typeof document !== 'undefined') {
+    const link = document.createElement('a');
+    link.href = url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.referrerPolicy = 'no-referrer';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    return;
+  }
+
+  // Native: system browser or LinkedIn app — avoids expo-web-browser WebView authwall.
+  const canOpen = await Linking.canOpenURL(url);
+  if (canOpen) {
+    await Linking.openURL(url);
+    return;
+  }
+
+  await WebBrowser.openBrowserAsync(url);
+}
 
 export default function Settings() {
   const { user, signOut } = useAuth();
@@ -216,10 +249,7 @@ Welcome to a seamless digital experience! 🚀`;
 
   const handleLinkedIn = async () => {
     try {
-      const url = 'https://www.linkedin.com/in/madhu-sri-82a60b372/';
-      const supported = await Linking.canOpenURL(url);
-      if (supported) await Linking.openURL(url);
-      else showAlert('Error', 'Cannot open LinkedIn');
+      await openLinkedInProfile();
     } catch (error) {
       console.error('Error opening LinkedIn URL:', error);
       showAlert('Error', 'Failed to open LinkedIn');
