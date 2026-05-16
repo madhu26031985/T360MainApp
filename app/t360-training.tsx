@@ -20,6 +20,7 @@ import {
   Mic,
   Mic2,
   Settings,
+  Share2,
   Sparkles,
   TrendingUp,
   Shield,
@@ -121,6 +122,13 @@ export default function T360TrainingScreen() {
           description="Knowledge base: roles, removals, accurate records, and FAQs for ExCom."
           descriptionEmphasized
           onPress={() => router.push('/t360-training-excomm-manage-club-members')}
+        />
+        <TrainingRow
+          icon={<Share2 size={18} color="#C026D3" strokeWidth={1.8} />}
+          title="Club Social Media"
+          description="Knowledge base: EXCOMM updates in Admin Panel, supported platforms, My Clubs visibility, and auto-save."
+          descriptionEmphasized
+          onPress={() => router.push('/t360-training-club-social-media')}
         />
         <TrainingRow
           icon={<Calendar size={18} color="#0EA5E9" strokeWidth={1.8} />}
