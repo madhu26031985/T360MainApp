@@ -13,138 +13,102 @@ const N = {
 };
 
 const FS = 0.9;
+const AMBER = '#D97706';
 
-const META_PILLS = ['2 access routes', 'Partially editable', 'Social media support'];
-
-const ACCESS_ROUTES: { num: string; title: string; steps: string[] }[] = [
+const FIND_STEPS = [
+  { title: 'Go to the Home tab', body: 'Start from the main Home screen in T360.' },
   {
-    num: '01',
-    title: 'Via Home Tab',
-    steps: [
-      'Tap the Home tab in the bottom navigation bar.',
-      'Scroll to and tap My Profile on the home screen.',
-      'The Edit Profile screen opens directly.',
-    ],
+    title: 'Open My Profile or Edit Profile',
+    body: 'Tap My Profile or Edit Profile to access your profile settings.',
   },
-  {
-    num: '02',
-    title: 'Via Settings Tab',
-    steps: [
-      'Tap the Settings tab in the bottom navigation bar.',
-      'Tap Edit Profile in the settings list.',
-      'The Edit Profile screen opens directly.',
-    ],
-  },
+  { title: 'Update your details and save', body: 'Make your changes and click Save to apply them.' },
 ];
 
-const PROFILE_FIELDS: { name: string; desc: string; badge: 'locked' | 'editable' }[] = [
-  {
-    name: 'Full Name',
-    desc: 'Your display name shown across the app. This field is managed by support and cannot be self-edited.',
-    badge: 'locked',
-  },
-  {
-    name: 'Email Address',
-    desc: 'The email linked to your account. To change it, please contact support.',
-    badge: 'locked',
-  },
-  {
-    name: 'Phone Number',
-    desc: 'Your registered mobile number. Tap the field to update it.',
-    badge: 'editable',
-  },
-  {
-    name: 'Location',
-    desc: 'Your city or region. Tap the field to update your current location.',
-    badge: 'editable',
-  },
-  {
-    name: 'About',
-    desc: 'A short bio about yourself, up to 300 characters. The counter shows how many characters you have used.',
-    badge: 'editable',
-  },
+const ABOUT_WHY: { icon: string; text: string }[] = [
+  { icon: '👥', text: 'Other members can view your profile under the Clubs tab' },
+  { icon: '🤝', text: 'Members learn about you before interacting' },
+  { icon: '🎤', text: 'Role holders can introduce you accurately during meetings' },
+  { icon: '🌐', text: 'Builds stronger personal and professional connections' },
 ];
 
-const SOCIAL_PLATFORMS = ['LinkedIn', 'Twitter / X', 'Instagram', 'YouTube'];
-
-const FAQS: { q: string; a: string }[] = [
-  {
-    q: "Why can't I edit my Full Name or Email?",
-    a: 'Full Name and Email are account-level fields managed by the support team to prevent unauthorised changes. Contact support through the app or at support@t360.in.',
-  },
-  {
-    q: 'How do I update my phone number?',
-    a: 'Tap the phone number field on the Edit Profile screen, enter a new number, then tap Save when done.',
-  },
-  {
-    q: 'What is the character limit for the About section?',
-    a: 'The About/Bio field supports up to 300 characters. A counter in the top-right corner shows your current usage (e.g. 145/300).',
-  },
-  {
-    q: 'Can I remove my profile photo?',
-    a: 'Tap the camera icon or "Change Photo" and look for a "Remove Photo" option. Some app versions may require a photo at all times.',
-  },
-  {
-    q: 'Are social media links visible to everyone?',
-    a: 'Social media links are shared within the platform based on your privacy settings. Check Privacy settings in the Settings tab before adding links.',
-  },
-  {
-    q: 'The Save button is greyed out — what should I do?',
-    a: 'A greyed-out Save button means no changes have been detected yet. Edit any editable field and the Save button will become active.',
-  },
-  {
-    q: 'I navigated away and lost my changes. Can I recover them?',
-    a: 'Unsaved changes cannot be recovered once you leave the Edit Profile screen. Always tap Save before leaving.',
-  },
-  {
-    q: 'Which social media platforms are supported?',
-    a: 'Currently: LinkedIn, Twitter/X, Instagram, and YouTube. More platforms may be added in future updates.',
-  },
-  {
-    q: 'Why are there two ways to open Edit Profile?',
-    a: 'The app provides Home (My Profile) and Settings (Edit Profile) routes for convenience. Both open exactly the same screen.',
-  },
-  {
-    q: 'How do I contact support to update my name or email?',
-    a: 'Email support@t360.in or use the in-app support option. Provide your registered phone number and the change you need.',
-  },
+const SOCIAL_PLATFORMS: { name: string; desc: string }[] = [
+  { name: 'LinkedIn', desc: 'Professional networking' },
+  { name: 'Twitter / X', desc: 'Ideas & updates' },
+  { name: 'Instagram', desc: 'Personal highlights' },
+  { name: 'YouTube', desc: 'Content & talks' },
 ];
 
-function AccessRouteCard({ num, title, steps }: { num: string; title: string; steps: string[] }) {
+const SOCIAL_BENEFITS = [
+  'Helps members connect with you professionally',
+  'Builds networking opportunities beyond meetings',
+  'Encourages collaboration and ongoing engagement',
+  'Adding social links is optional, but recommended',
+];
+
+const MATTERS_CARDS: { icon: string; text: string }[] = [
+  { icon: '🪪', text: 'Represents who you are within the club community' },
+  { icon: '🤝', text: 'Helps members connect with you more naturally' },
+  { icon: '🎙️', text: 'Supports better and more accurate meeting introductions' },
+  { icon: '👁️', text: 'Builds your visibility within the club' },
+  { icon: '🌐', text: 'Creates professional and personal networking opportunities' },
+  { icon: '🚀', text: 'Showcases your Toastmasters journey and growth' },
+];
+
+function NumberedSteps({ steps }: { steps: { title: string; body: string }[] }) {
   return (
-    <View style={styles.accessCard}>
-      <Text style={styles.accessNum} maxFontSizeMultiplier={1.2}>
-        {num}
-      </Text>
-      <Text style={styles.accessTitle} maxFontSizeMultiplier={1.25}>
-        {title}
-      </Text>
+    <>
       {steps.map((step, i) => (
-        <View key={step} style={styles.stepRow}>
+        <View key={step.title} style={styles.stepRow}>
           <View style={styles.stepNum}>
             <Text style={styles.stepNumText} maxFontSizeMultiplier={1.1}>
               {i + 1}
             </Text>
           </View>
-          <Text style={styles.stepText} maxFontSizeMultiplier={1.25}>
-            {step}
-          </Text>
+          <View style={styles.stepBody}>
+            <Text style={styles.stepTitle} maxFontSizeMultiplier={1.25}>
+              {step.title}
+            </Text>
+            <Text style={styles.stepText} maxFontSizeMultiplier={1.25}>
+              {step.body}
+            </Text>
+          </View>
         </View>
       ))}
-    </View>
+    </>
   );
 }
 
-function FieldBadge({ type }: { type: 'locked' | 'editable' }) {
-  const locked = type === 'locked';
+function UpdateCard({
+  title,
+  body,
+  tags,
+  children,
+}: {
+  title: string;
+  body: string;
+  tags?: string[];
+  children?: React.ReactNode;
+}) {
   return (
-    <View style={[styles.fieldBadge, locked ? styles.fieldBadgeLocked : styles.fieldBadgeEditable]}>
-      <Text
-        style={[styles.fieldBadgeText, locked ? styles.fieldBadgeTextLocked : styles.fieldBadgeTextEditable]}
-        maxFontSizeMultiplier={1.1}
-      >
-        {locked ? 'Locked' : 'Editable'}
+    <View style={styles.updateCard}>
+      <Text style={styles.updateCardTitle} maxFontSizeMultiplier={1.25}>
+        {title}
       </Text>
+      <Text style={styles.updateCardBody} maxFontSizeMultiplier={1.25}>
+        {body}
+      </Text>
+      {tags ? (
+        <View style={styles.tagRow}>
+          {tags.map((tag) => (
+            <View key={tag} style={styles.miniTag}>
+              <Text style={styles.miniTagText} maxFontSizeMultiplier={1.15}>
+                {tag}
+              </Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
+      {children}
     </View>
   );
 }
@@ -160,7 +124,7 @@ export default function T360TrainingMyProfileScreen() {
         >
           <ArrowLeft size={Math.round(22 * FS)} color={N.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle} maxFontSizeMultiplier={1.3}>
+        <Text style={styles.headerTitle} maxFontSizeMultiplier={1.25}>
           My Profile
         </Text>
         <View style={styles.headerSpacer} />
@@ -179,173 +143,114 @@ export default function T360TrainingMyProfileScreen() {
             </Text>
           </View>
           <Text style={styles.docTitle} maxFontSizeMultiplier={1.35}>
-            My Profile — View & Edit
+            My Profile
           </Text>
           <Text style={styles.lead} maxFontSizeMultiplier={1.3}>
-            Your Profile screen is where you view your account details and make updates — all in one place. Access it
-            from the Home tab or Settings tab.
+            Your profile acts as your personal introduction within the club. Keeping it updated helps other members
+            know more about you and makes networking and role-based introductions easier during meetings.
           </Text>
 
-          <View style={styles.metaWrap}>
-            {META_PILLS.map((pill) => (
-              <View key={pill} style={styles.metaPill}>
-                <Text style={styles.metaPillText} maxFontSizeMultiplier={1.15}>
-                  {pill}
+          <Text style={styles.sectionHeading} maxFontSizeMultiplier={1.3}>
+            Where to find My Profile
+          </Text>
+          <NumberedSteps steps={FIND_STEPS} />
+
+          <Text style={styles.sectionHeading} maxFontSizeMultiplier={1.3}>
+            What you can update
+          </Text>
+
+          <UpdateCard
+            title="1. Profile photo"
+            body="Add a clear profile picture so other members can easily recognize you during meetings and events."
+            tags={['Helps with recognition', 'Visible to all members']}
+          />
+
+          <UpdateCard
+            title="2. Contact information"
+            body="Keep your contact details current so members can reach you when needed."
+            tags={['Phone number', 'Location', 'Email address']}
+          />
+
+          <UpdateCard
+            title="3. About section"
+            body="The About section acts as your introduction to the club. Share what makes you, you."
+            tags={[
+              'Interests',
+              'Professional background',
+              'Toastmasters journey',
+              'Goals & achievements',
+              'Hobbies & passions',
+            ]}
+          >
+            <Text style={styles.subLabel} maxFontSizeMultiplier={1.2}>
+              Why the About section matters
+            </Text>
+            {ABOUT_WHY.map(({ icon, text }) => (
+              <View key={text} style={styles.whyCard}>
+                <Text style={styles.whyIcon} maxFontSizeMultiplier={1.2}>
+                  {icon}
+                </Text>
+                <Text style={styles.whyText} maxFontSizeMultiplier={1.25}>
+                  {text}
+                </Text>
+              </View>
+            ))}
+          </UpdateCard>
+
+          <UpdateCard
+            title="4. Social media links"
+            body="Optionally connect your social profiles to expand your presence and enable networking beyond meetings."
+          >
+            <View style={styles.socialGrid}>
+              {SOCIAL_PLATFORMS.map(({ name, desc }) => (
+                <View key={name} style={styles.socialCard}>
+                  <Text style={styles.socialName} maxFontSizeMultiplier={1.2}>
+                    {name}
+                  </Text>
+                  <Text style={styles.socialDesc} maxFontSizeMultiplier={1.15}>
+                    {desc}
+                  </Text>
+                </View>
+              ))}
+            </View>
+            <View style={styles.calloutAmber}>
+              {SOCIAL_BENEFITS.map((line) => (
+                <Text key={line} style={styles.calloutAmberLine} maxFontSizeMultiplier={1.25}>
+                  → {line}
+                </Text>
+              ))}
+            </View>
+          </UpdateCard>
+
+          <Text style={styles.sectionHeading} maxFontSizeMultiplier={1.3}>
+            Why keeping your profile updated matters
+          </Text>
+          <View style={styles.mattersGrid}>
+            {MATTERS_CARDS.map(({ icon, text }) => (
+              <View key={text} style={styles.mattersCard}>
+                <Text style={styles.mattersIcon} maxFontSizeMultiplier={1.3}>
+                  {icon}
+                </Text>
+                <Text style={styles.mattersText} maxFontSizeMultiplier={1.2}>
+                  {text}
                 </Text>
               </View>
             ))}
           </View>
 
           <Text style={styles.sectionHeading} maxFontSizeMultiplier={1.3}>
-            How to access My Profile
+            Final note
           </Text>
-          <Text style={styles.body} maxFontSizeMultiplier={1.25}>
-            The My Profile screen can be reached in two ways — both open the exact same screen where you can view and
-            edit your details:
-          </Text>
-          {ACCESS_ROUTES.map((route) => (
-            <AccessRouteCard key={route.title} {...route} />
-          ))}
-          <View style={styles.calloutInfo}>
-            <Text style={styles.calloutInfoText} maxFontSizeMultiplier={1.25}>
-              Both routes open the same Edit Profile screen. Use whichever is more convenient for you.
+          <View style={styles.finalNote}>
+            <Text style={styles.finalNoteTitle} maxFontSizeMultiplier={1.25}>
+              Your profile is more than basic information
+            </Text>
+            <Text style={styles.finalNoteBody} maxFontSizeMultiplier={1.25}>
+              It is your identity within the club. Keeping it updated helps others understand your journey, interests,
+              and contributions to the community — making every interaction more meaningful and every introduction
+              more impactful.
             </Text>
           </View>
-
-          <Text style={styles.sectionHeading} maxFontSizeMultiplier={1.3}>
-            What you can see
-          </Text>
-          <Text style={styles.body} maxFontSizeMultiplier={1.25}>
-            When you open My Profile, you&apos;ll see all your current account information at a glance:
-          </Text>
-          <View style={styles.miniCard}>
-            <Text style={styles.miniCardTitle} maxFontSizeMultiplier={1.25}>
-              Profile overview
-            </Text>
-            <Text style={styles.miniCardBody} maxFontSizeMultiplier={1.25}>
-              Your profile picture, full name, email address, phone number, and city are displayed at the top. Below
-              that, your About/Bio text and linked social media accounts are shown. Some fields are view-only; others
-              can be tapped to edit directly.
-            </Text>
-          </View>
-          <View style={styles.calloutInfo}>
-            <Text style={styles.calloutInfoText} maxFontSizeMultiplier={1.25}>
-              My Profile = Edit Profile. The screen is named &quot;My Profile&quot; from Home and &quot;Edit Profile&quot;
-              from Settings — same screen, identical functionality.
-            </Text>
-          </View>
-
-          <Text style={styles.sectionHeading} maxFontSizeMultiplier={1.3}>
-            Editable fields
-          </Text>
-          <Text style={styles.body} maxFontSizeMultiplier={1.25}>
-            Below is a description of every field and whether it can be changed by you directly.
-          </Text>
-          {PROFILE_FIELDS.map(({ name, desc, badge }) => (
-            <View key={name} style={styles.fieldRow}>
-              <View style={styles.fieldRowTop}>
-                <Text style={styles.fieldName} maxFontSizeMultiplier={1.25}>
-                  {name}
-                </Text>
-                <FieldBadge type={badge} />
-              </View>
-              <Text style={styles.fieldDesc} maxFontSizeMultiplier={1.25}>
-                {desc}
-              </Text>
-            </View>
-          ))}
-          <View style={styles.calloutWarn}>
-            <Text style={styles.calloutWarnText} maxFontSizeMultiplier={1.25}>
-              Full Name &amp; Email are locked. These fields display &quot;Contact support to update&quot; below them.
-              Reach out to the support team to request changes.
-            </Text>
-          </View>
-
-          <Text style={styles.sectionHeading} maxFontSizeMultiplier={1.3}>
-            Profile photo
-          </Text>
-          <View style={styles.miniCard}>
-            <Text style={styles.miniCardTitle} maxFontSizeMultiplier={1.25}>
-              How to change your photo
-            </Text>
-            <Text style={styles.miniCardBody} maxFontSizeMultiplier={1.25}>
-              Tap the camera icon on the bottom-right of your profile picture, or tap Change Photo below it. Choose an
-              image from your device&apos;s photo library or take a new one.
-            </Text>
-          </View>
-          <View style={styles.calloutOk}>
-            <Text style={styles.calloutOkText} maxFontSizeMultiplier={1.25}>
-              For best results, use a square image. A clear, well-lit headshot helps others recognise you in clubs and
-              meetings.
-            </Text>
-          </View>
-
-          <Text style={styles.sectionHeading} maxFontSizeMultiplier={1.3}>
-            Social media links
-          </Text>
-          <View style={styles.miniCard}>
-            <Text style={styles.miniCardTitle} maxFontSizeMultiplier={1.25}>
-              Supported platforms
-            </Text>
-            <Text style={styles.miniCardBody} maxFontSizeMultiplier={1.25}>
-              You can add profile links for the following platforms. Tap on any icon to add or update your URL.
-            </Text>
-            <View style={styles.socialRow}>
-              {SOCIAL_PLATFORMS.map((platform) => (
-                <View key={platform} style={styles.socialChip}>
-                  <Text style={styles.socialChipText} maxFontSizeMultiplier={1.15}>
-                    {platform}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          </View>
-          <View style={styles.calloutInfo}>
-            <Text style={styles.calloutInfoText} maxFontSizeMultiplier={1.25}>
-              Social media links are optional. Only add the ones you&apos;d like to share with your network on the
-              platform.
-            </Text>
-          </View>
-
-          <Text style={styles.sectionHeading} maxFontSizeMultiplier={1.3}>
-            Saving your changes
-          </Text>
-          <View style={styles.miniCard}>
-            <Text style={styles.miniCardTitle} maxFontSizeMultiplier={1.25}>
-              Using the Save button
-            </Text>
-            <Text style={styles.miniCardBody} maxFontSizeMultiplier={1.25}>
-              After making any edits, tap Save at the bottom of the screen. The button appears active only when there
-              are unsaved changes. If no changes have been made, Save remains greyed out.
-            </Text>
-          </View>
-          <View style={styles.calloutWarn}>
-            <Text style={styles.calloutWarnText} maxFontSizeMultiplier={1.25}>
-              Navigating away without tapping Save will discard any unsaved changes. Always tap Save before leaving the
-              screen.
-            </Text>
-          </View>
-
-          <Text style={styles.faqHeading} maxFontSizeMultiplier={1.3}>
-            Frequently asked questions
-          </Text>
-          {FAQS.map(({ q, a }, i) => (
-            <View key={q} style={[styles.faqBlock, i > 0 && styles.faqBlockBorder]}>
-              <View style={styles.faqQRow}>
-                <View style={styles.faqQBadge}>
-                  <Text style={styles.faqQBadgeText} maxFontSizeMultiplier={1.1}>
-                    Q{i + 1}
-                  </Text>
-                </View>
-                <Text style={styles.faqQ} maxFontSizeMultiplier={1.25}>
-                  {q}
-                </Text>
-              </View>
-              <Text style={styles.faqA} maxFontSizeMultiplier={1.25}>
-                {a}
-              </Text>
-            </View>
-          ))}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -378,13 +283,10 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'center',
     color: N.text,
-    fontSize: 20 * FS,
+    fontSize: 18 * FS,
     fontWeight: '700',
   },
-  headerSpacer: {
-    width: 36,
-    height: 36,
-  },
+  headerSpacer: { width: 36, height: 36 },
   scroll: { flex: 1 },
   scrollContent: { paddingBottom: 32 },
   card: {
@@ -396,7 +298,7 @@ const styles = StyleSheet.create({
   },
   kbBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(14, 165, 233, 0.12)',
+    backgroundColor: 'rgba(245, 158, 11, 0.12)',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 999,
@@ -405,7 +307,7 @@ const styles = StyleSheet.create({
   kbBadgeText: {
     fontSize: 12 * FS,
     fontWeight: '600',
-    color: '#0369A1',
+    color: AMBER,
   },
   docTitle: {
     fontSize: 22 * FS,
@@ -418,256 +320,202 @@ const styles = StyleSheet.create({
     fontSize: 15 * FS,
     lineHeight: 22 * FS,
     color: N.textSecondary,
-    marginBottom: 14,
-  },
-  metaWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 20,
-  },
-  metaPill: {
-    backgroundColor: 'rgba(59, 91, 219, 0.1)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 999,
-    marginRight: 8,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(59, 91, 219, 0.2)',
-  },
-  metaPillText: {
-    fontSize: 12 * FS,
-    fontWeight: '600',
-    color: '#3B5BDB',
+    marginBottom: 22,
   },
   sectionHeading: {
     fontSize: 16 * FS,
     fontWeight: '700',
     color: N.text,
     marginTop: 8,
-    marginBottom: 8,
-  },
-  body: {
-    fontSize: 15 * FS,
-    lineHeight: 23 * FS,
-    color: N.text,
     marginBottom: 12,
   },
-  accessCard: {
+  stepRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 14,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: N.border,
+  },
+  stepNum: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: 'rgba(245, 158, 11, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  stepNumText: {
+    fontSize: 12 * FS,
+    fontWeight: '700',
+    color: AMBER,
+  },
+  stepBody: { flex: 1 },
+  stepTitle: {
+    fontSize: 14 * FS,
+    fontWeight: '700',
+    color: N.text,
+    marginBottom: 4,
+  },
+  stepText: {
+    fontSize: 13 * FS,
+    lineHeight: 20 * FS,
+    color: N.textSecondary,
+  },
+  updateCard: {
     borderWidth: 1,
     borderColor: N.border,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     backgroundColor: 'rgba(55, 53, 47, 0.02)',
-    borderTopWidth: 3,
-    borderTopColor: '#3B5BDB',
+    borderLeftWidth: 3,
+    borderLeftColor: AMBER,
   },
-  accessNum: {
-    fontSize: 28 * FS,
-    fontWeight: '700',
-    color: 'rgba(59, 91, 219, 0.25)',
-    marginBottom: 4,
-  },
-  accessTitle: {
+  updateCardTitle: {
     fontSize: 15 * FS,
     fontWeight: '700',
     color: N.text,
-    marginBottom: 10,
+    marginBottom: 6,
   },
-  stepRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+  updateCardBody: {
+    fontSize: 14 * FS,
+    lineHeight: 21 * FS,
+    color: N.textSecondary,
     marginBottom: 8,
   },
-  stepNum: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: '#3B5BDB',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 10,
-    marginTop: 1,
+  tagRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: 4,
   },
-  stepNumText: {
+  miniTag: {
+    backgroundColor: N.surface,
+    borderWidth: 1,
+    borderColor: N.border,
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  miniTagText: {
+    fontSize: 12 * FS,
+    color: N.textSecondary,
+  },
+  subLabel: {
     fontSize: 11 * FS,
     fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  stepText: {
-    flex: 1,
-    fontSize: 14 * FS,
-    lineHeight: 21 * FS,
     color: N.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    marginTop: 12,
+    marginBottom: 8,
   },
-  calloutInfo: {
-    backgroundColor: 'rgba(37, 99, 235, 0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(37, 99, 235, 0.2)',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 16,
-  },
-  calloutInfoText: {
-    fontSize: 14 * FS,
-    lineHeight: 21 * FS,
-    color: '#1D4ED8',
-    fontWeight: '500',
-  },
-  calloutWarn: {
-    backgroundColor: 'rgba(234, 179, 8, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(234, 179, 8, 0.35)',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 16,
-  },
-  calloutWarnText: {
-    fontSize: 14 * FS,
-    lineHeight: 21 * FS,
-    color: '#7C5A00',
-    fontWeight: '500',
-  },
-  calloutOk: {
-    backgroundColor: 'rgba(22, 163, 74, 0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(22, 163, 74, 0.22)',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 16,
-  },
-  calloutOkText: {
-    fontSize: 14 * FS,
-    lineHeight: 21 * FS,
-    color: '#15803D',
-    fontWeight: '500',
-  },
-  miniCard: {
+  whyCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
     borderWidth: 1,
     borderColor: N.border,
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 10,
-    backgroundColor: 'rgba(55, 53, 47, 0.02)',
-  },
-  miniCardTitle: {
-    fontSize: 15 * FS,
-    fontWeight: '700',
-    color: N.text,
+    borderRadius: 8,
+    padding: 10,
     marginBottom: 6,
-  },
-  miniCardBody: {
-    fontSize: 14 * FS,
-    lineHeight: 21 * FS,
-    color: N.textSecondary,
-  },
-  fieldRow: {
-    borderWidth: 1,
-    borderColor: N.border,
-    borderRadius: 10,
-    padding: 14,
-    marginBottom: 10,
     backgroundColor: N.surface,
   },
-  fieldRowTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 6,
-    gap: 8,
-  },
-  fieldName: {
+  whyIcon: { fontSize: 16 },
+  whyText: {
     flex: 1,
-    fontSize: 14 * FS,
+    fontSize: 13 * FS,
+    lineHeight: 19 * FS,
+    color: N.textSecondary,
+  },
+  socialGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  socialCard: {
+    width: '47%',
+    flexGrow: 1,
+    minWidth: 130,
+    borderWidth: 1,
+    borderColor: N.border,
+    borderRadius: 10,
+    padding: 12,
+    backgroundColor: N.surface,
+    alignItems: 'center',
+  },
+  socialName: {
+    fontSize: 13 * FS,
     fontWeight: '700',
     color: N.text,
+    marginBottom: 4,
+    textAlign: 'center',
   },
-  fieldDesc: {
+  socialDesc: {
+    fontSize: 12 * FS,
+    color: N.textSecondary,
+    textAlign: 'center',
+  },
+  calloutAmber: {
+    backgroundColor: 'rgba(245, 158, 11, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.22)',
+    borderRadius: 10,
+    padding: 12,
+    marginTop: 4,
+  },
+  calloutAmberLine: {
     fontSize: 13 * FS,
     lineHeight: 20 * FS,
     color: N.textSecondary,
+    marginBottom: 4,
   },
-  fieldBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-  },
-  fieldBadgeLocked: {
-    backgroundColor: '#FFF3BF',
-  },
-  fieldBadgeEditable: {
-    backgroundColor: '#D3F9D8',
-  },
-  fieldBadgeText: {
-    fontSize: 11 * FS,
-    fontWeight: '700',
-  },
-  fieldBadgeTextLocked: {
-    color: '#945000',
-  },
-  fieldBadgeTextEditable: {
-    color: '#2F9E44',
-  },
-  socialRow: {
+  mattersGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginTop: 12,
-  },
-  socialChip: {
-    backgroundColor: N.surface,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: N.border,
-    marginRight: 8,
+    gap: 8,
     marginBottom: 8,
   },
-  socialChipText: {
-    fontSize: 13 * FS,
-    fontWeight: '600',
-    color: N.text,
+  mattersCard: {
+    width: '47%',
+    flexGrow: 1,
+    minWidth: 140,
+    borderWidth: 1,
+    borderColor: N.border,
+    borderRadius: 10,
+    padding: 12,
+    backgroundColor: N.surface,
+    alignItems: 'center',
   },
-  faqHeading: {
-    fontSize: 16 * FS,
-    fontWeight: '700',
-    color: N.text,
-    marginTop: 12,
-    marginBottom: 12,
-  },
-  faqBlock: {
-    paddingVertical: 12,
-  },
-  faqBlockBorder: {
-    borderTopWidth: 1,
-    borderTopColor: N.border,
-  },
-  faqQRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+  mattersIcon: {
     marginBottom: 6,
   },
-  faqQBadge: {
-    backgroundColor: 'rgba(14, 165, 233, 0.18)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-    marginRight: 8,
+  mattersText: {
+    fontSize: 12 * FS,
+    lineHeight: 17 * FS,
+    color: N.textSecondary,
+    textAlign: 'center',
   },
-  faqQBadgeText: {
-    fontSize: 11 * FS,
-    fontWeight: '800',
-    color: '#0369A1',
+  finalNote: {
+    backgroundColor: 'rgba(108, 99, 255, 0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(108, 99, 255, 0.2)',
+    borderRadius: 12,
+    padding: 16,
   },
-  faqQ: {
-    flex: 1,
+  finalNoteTitle: {
     fontSize: 15 * FS,
     fontWeight: '700',
-    lineHeight: 22 * FS,
     color: N.text,
+    marginBottom: 6,
   },
-  faqA: {
+  finalNoteBody: {
     fontSize: 14 * FS,
     lineHeight: 21 * FS,
     color: N.textSecondary,

@@ -10,6 +10,7 @@ import {
   CalendarDays,
   ChevronRight,
   GraduationCap,
+  History,
   Home,
   Info,
   Landmark,
@@ -129,6 +130,13 @@ export default function T360TrainingScreen() {
           onPress={() => router.push('/t360-training-excomm-manage-meetings')}
         />
         <TrainingRow
+          icon={<History size={18} color="#0284C7" strokeWidth={1.8} />}
+          title="Meeting History"
+          description="Knowledge base: view completed meetings, agendas, role records, and historical club data from the Meetings tab."
+          descriptionEmphasized
+          onPress={() => router.push('/t360-training-meeting-history')}
+        />
+        <TrainingRow
           icon={<UserCheck size={18} color="#15803D" strokeWidth={1.8} />}
           title="Book a Role"
           description="Knowledge base: Open, Mine, and Taken sections; how to book; after booking; FAQs."
@@ -201,14 +209,14 @@ export default function T360TrainingScreen() {
         <TrainingRow
           icon={<User size={18} color="#BE185D" strokeWidth={1.8} />}
           title="My Profile"
-          description="Knowledge base: view and edit your profile from Home or Settings, editable fields, photo, social links, and FAQs."
+          description="Knowledge base: update your photo, contact info, About section, social links, and why your profile matters in the club."
           descriptionEmphasized
           onPress={() => router.push('/t360-training-my-profile')}
         />
         <TrainingRow
           icon={<TrendingUp size={18} color="#2563C4" strokeWidth={1.8} />}
           title="My Growth"
-          description="Knowledge base: attendance, awards, role insights across four tracks, streaks, and FAQs from the Home tab."
+          description="Knowledge base: attendance tracker, awards & milestones, role insights across four tracks, and growth intelligence."
           descriptionEmphasized
           onPress={() => router.push('/t360-training-my-growth')}
         />
