@@ -18,9 +18,11 @@ import {
   Mic2,
   Settings,
   Sparkles,
+  TrendingUp,
   Shield,
   UserCog,
   UserCheck,
+  User,
   UserPlus,
   Users,
   Vote,
@@ -179,6 +181,20 @@ export default function T360TrainingScreen() {
           description="Fair, structured, anonymous voting from poll creation to results."
           descriptionEmphasized
           onPress={() => router.push('/t360-training-excomm-voting-operations')}
+        />
+        <TrainingRow
+          icon={<User size={18} color="#BE185D" strokeWidth={1.8} />}
+          title="My Profile"
+          description="Knowledge base: view and edit your profile from Home or Settings, editable fields, photo, social links, and FAQs."
+          descriptionEmphasized
+          onPress={() => router.push('/t360-training-my-profile')}
+        />
+        <TrainingRow
+          icon={<TrendingUp size={18} color="#2563C4" strokeWidth={1.8} />}
+          title="My Growth"
+          description="Knowledge base: attendance, awards, role insights across four tracks, streaks, and FAQs from the Home tab."
+          descriptionEmphasized
+          onPress={() => router.push('/t360-training-my-growth')}
         />
         <TrainingRow
           icon={<Home size={18} color="#0D9488" strokeWidth={1.8} />}
