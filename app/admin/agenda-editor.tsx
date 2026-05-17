@@ -18,7 +18,6 @@ import {
 } from 'react-native';
 import {
   DraggableFlatList,
-  NestableDraggableFlatList,
   NestableScrollContainer,
   ScaleDecorator,
 } from '@/components/admin/agendaDragReorder';
@@ -28,7 +27,7 @@ import {
 } from '@/components/admin/agendaSectionDragTypes';
 import { AgendaDragScrollContext } from '@/components/admin/agendaDragScrollContext';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { Fragment, useState, useEffect, useRef, useMemo } from 'react';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -425,6 +424,10 @@ export default function AgendaEditor() {
   const [sectionFilter, setSectionFilter] = useState<'all' | Set<string>>('all');
   const [sectionFilterModalVisible, setSectionFilterModalVisible] = useState(false);
   const [manageSequenceModalVisible, setManageSequenceModalVisible] = useState(false);
+  const [sectionPositionPicker, setSectionPositionPicker] = useState<{
+    itemId: string;
+    sectionName: string;
+  } | null>(null);
   const [sectionDragPressingId, setSectionDragPressingId] = useState<string | null>(null);
   const [sectionDragReadyId, setSectionDragReadyId] = useState<string | null>(null);
   const sectionDragArmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -3603,6 +3606,18 @@ export default function AgendaEditor() {
     await reorderAgendaItems(newItems);
   };
 
+  const moveItemToPosition = async (itemId: string, targetPosition: number) => {
+    const fromIndex = agendaItems.findIndex((i) => i.id === itemId);
+    if (fromIndex < 0) return;
+    const toIndex = Math.max(0, Math.min(agendaItems.length - 1, targetPosition - 1));
+    setSectionPositionPicker(null);
+    if (fromIndex === toIndex) return;
+    const newItems = [...agendaItems];
+    const [removed] = newItems.splice(fromIndex, 1);
+    newItems.splice(toIndex, 0, removed);
+    await reorderAgendaItems(newItems);
+  };
+
   /** Display-only: HH:MM (24-hour), aligned with member agenda view. */
   const formatTime = (timeString: string | null) => {
     if (!timeString) return 'N/A';
@@ -3683,14 +3698,10 @@ export default function AgendaEditor() {
     item: AgendaItem,
     rowIndex: number,
     listLength: number,
-    dragHandle?: AgendaSectionDragHandle,
+    showArrowReorder = false,
   ) => {
-    const index =
-      dragHandle != null ? rowIndex : agendaItems.findIndex((i) => i.id === item.id);
+    const index = agendaItems.findIndex((i) => i.id === item.id);
     const isLastRow = rowIndex === listLength - 1;
-    const isDragging = dragHandle?.isActive ?? false;
-    const isPressing = (dragHandle?.isPressing ?? false) && !isDragging;
-    const isReady = (dragHandle?.isReady ?? false) && !isDragging;
 
     const sectionTitleBlock = (
       <View style={styles.cardTitleRow}>
@@ -3724,9 +3735,24 @@ export default function AgendaEditor() {
               </View>
             )}
           </View>
-          <Text style={[styles.sectionOrder, { color: theme.colors.textSecondary }]} maxFontSizeMultiplier={1.3}>
-            Section {item.section_order}
-          </Text>
+          {showArrowReorder ? (
+            <TouchableOpacity
+              onPress={() => setSectionPositionPicker({ itemId: item.id, sectionName: item.section_name })}
+              style={[styles.sectionOrderButton, { borderColor: theme.colors.primary + '55' }]}
+              activeOpacity={0.75}
+              accessibilityRole="button"
+              accessibilityLabel={`Move ${item.section_name} to another position`}
+            >
+              <Text style={[styles.sectionOrder, { color: theme.colors.primary }]} maxFontSizeMultiplier={1.3}>
+                Section {item.section_order}
+              </Text>
+              <ChevronDown size={14} color={theme.colors.primary} />
+            </TouchableOpacity>
+          ) : (
+            <Text style={[styles.sectionOrder, { color: theme.colors.textSecondary }]} maxFontSizeMultiplier={1.3}>
+              Section {item.section_order}
+            </Text>
+          )}
         </View>
       </View>
     );
@@ -3736,7 +3762,6 @@ export default function AgendaEditor() {
             style={[
               styles.agendaCard,
               { backgroundColor: theme.colors.surface },
-              isDragging && styles.agendaCardDragging,
               !isLastRow && {
                 borderBottomWidth: StyleSheet.hairlineWidth,
                 borderBottomColor: theme.colors.border,
@@ -3744,63 +3769,10 @@ export default function AgendaEditor() {
             ]}
           >
             <View style={styles.cardHeader}>
-              <View style={styles.cardHeaderMain}>
-                {dragHandle ? (
-                  <Pressable
-                    onPressIn={(e) => dragHandle.onDragPressIn(e.nativeEvent.pageY)}
-                    onPressOut={dragHandle.onDragPressOut}
-                    onLongPress={dragHandle.onDragLongPress ?? dragHandle.drag}
-                    delayLongPress={AGENDA_SECTION_LONG_PRESS_MS}
-                    style={[
-                      styles.sectionDragZone,
-                      isPressing && { backgroundColor: theme.colors.primary + '14' },
-                      isReady && {
-                        backgroundColor: theme.colors.primary + '32',
-                        borderColor: theme.colors.primary,
-                      },
-                      isDragging && {
-                        backgroundColor: theme.colors.primary + '22',
-                        borderColor: theme.colors.primary,
-                      },
-                      Platform.OS === 'web' &&
-                        (isReady || isDragging) && ({
-                          cursor: isDragging ? 'grabbing' : 'grab',
-                          userSelect: 'none',
-                        } as const),
-                    ]}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Press and hold to reorder ${item.section_name}`}
-                  >
-                    <GripVertical
-                      size={26}
-                      color={isReady || isDragging ? theme.colors.primary : theme.colors.textSecondary}
-                    />
-                    <View style={styles.sectionDragZoneContent}>
-                      {sectionTitleBlock}
-                      {isReady && !isDragging ? (
-                        <Text
-                          style={[styles.sectionDragReadyLabel, { color: theme.colors.primary }]}
-                          maxFontSizeMultiplier={1.2}
-                        >
-                          Ready — drag up or down
-                        </Text>
-                      ) : isPressing && !isReady ? (
-                        <Text
-                          style={[styles.sectionDragReadyLabel, { color: theme.colors.textSecondary }]}
-                          maxFontSizeMultiplier={1.2}
-                        >
-                          Keep holding…
-                        </Text>
-                      ) : null}
-                    </View>
-                  </Pressable>
-                ) : (
-                  sectionTitleBlock
-                )}
-              </View>
+              <View style={styles.cardHeaderMain}>{sectionTitleBlock}</View>
 
               <View style={styles.headerActions}>
-                {!dragHandle ? (
+                {showArrowReorder ? (
                   <View style={styles.reorderButtons}>
                     <TouchableOpacity
                       onPress={() => moveItemUp(index)}
@@ -3815,7 +3787,10 @@ export default function AgendaEditor() {
                     <TouchableOpacity
                       onPress={() => moveItemDown(index)}
                       disabled={index === agendaItems.length - 1}
-                      style={[styles.reorderButton, index === agendaItems.length - 1 && styles.reorderButtonDisabled]}
+                      style={[
+                        styles.reorderButton,
+                        index === agendaItems.length - 1 && styles.reorderButtonDisabled,
+                      ]}
                     >
                       <ChevronDown
                         size={18}
@@ -6106,9 +6081,9 @@ export default function AgendaEditor() {
               { borderBottomColor: theme.colors.border, backgroundColor: theme.colors.background },
             ]}
           >
-            <GripVertical size={16} color={theme.colors.textSecondary} />
+            <ChevronUp size={16} color={theme.colors.textSecondary} />
             <Text style={[styles.sectionDragHintText, { color: theme.colors.textSecondary }]} maxFontSizeMultiplier={1.3}>
-              Press and hold a section title until it highlights, then drag up or down. Move near the top or bottom of the screen to scroll while dragging.
+              Use ↑ ↓ to move one step. Tap a section number to jump to a position. Use Manage sequence to drag-reorder.
             </Text>
           </View>
         )}
@@ -6139,35 +6114,17 @@ export default function AgendaEditor() {
               Use the filter above to select which sections to display.
             </Text>
           </View>
-        ) : sectionFilter === 'all' ? (
-          <NestableDraggableFlatList
-            data={agendaItems}
-            keyExtractor={(item) => item.id}
-            activationDistance={12}
-            autoscrollThreshold={80}
-            autoscrollSpeed={90}
-            onDragEnd={({ data }) => {
-              void reorderAgendaItems(data);
-              clearSectionDragArmState();
-            }}
-            onRelease={() => clearSectionDragArmState()}
-            renderItem={({ item, drag, isActive, getIndex, ...dragUi }) => (
-              <ScaleDecorator>
-                {renderAgendaSectionRow(
-                  item,
-                  getIndex() ?? 0,
-                  agendaItems.length,
-                  Platform.OS === 'web'
-                    ? { drag, isActive, ...dragUi }
-                    : buildNativeSectionDragHandle(item, drag, isActive),
-                )}
-              </ScaleDecorator>
-            )}
-          />
         ) : (
-          filteredAgendaItems.map((item, rowIndex) =>
-            renderAgendaSectionRow(item, rowIndex, filteredAgendaItems.length)
-          )
+          (sectionFilter === 'all' ? agendaItems : filteredAgendaItems).map((item, rowIndex) => (
+            <Fragment key={item.id}>
+              {renderAgendaSectionRow(
+                item,
+                rowIndex,
+                sectionFilter === 'all' ? agendaItems.length : filteredAgendaItems.length,
+                sectionFilter === 'all',
+              )}
+            </Fragment>
+          ))
         )}
         </View>
         ) : null}
@@ -6320,6 +6277,75 @@ export default function AgendaEditor() {
                     <UserPlus size={18} color={theme.colors.primary} />
                   </TouchableOpacity>
                 ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={sectionPositionPicker != null}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setSectionPositionPicker(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.manageSequenceModalContent, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
+            <View style={[styles.modalHeader, { borderBottomColor: theme.colors.border }]}>
+              <Text style={[styles.modalTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3}>
+                Move to position
+              </Text>
+              <TouchableOpacity onPress={() => setSectionPositionPicker(null)} style={styles.closeButton}>
+                <X size={24} color={theme.colors.text} />
+              </TouchableOpacity>
+            </View>
+            {sectionPositionPicker ? (
+              <Text style={[styles.manageSequenceSubtitle, { color: theme.colors.textSecondary }]} maxFontSizeMultiplier={1.3}>
+                Choose where to place “{sectionPositionPicker.sectionName}” in the sequence.
+              </Text>
+            ) : null}
+            <ScrollView style={styles.sectionPositionList} showsVerticalScrollIndicator={true}>
+              {agendaItems.map((row, positionIndex) => {
+                const position = positionIndex + 1;
+                const isCurrent = row.id === sectionPositionPicker?.itemId;
+                return (
+                  <TouchableOpacity
+                    key={row.id}
+                    onPress={() => {
+                      if (sectionPositionPicker) {
+                        void moveItemToPosition(sectionPositionPicker.itemId, position);
+                      }
+                    }}
+                    style={[
+                      styles.sectionPositionRow,
+                      { borderBottomColor: theme.colors.border },
+                      isCurrent && { backgroundColor: theme.colors.primary + '14' },
+                    ]}
+                    activeOpacity={0.75}
+                  >
+                    <Text style={[styles.sectionPositionNumber, { color: theme.colors.primary }]} maxFontSizeMultiplier={1.3}>
+                      {position}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.sectionPositionName,
+                        {
+                          color: row.is_visible ? theme.colors.text : theme.colors.textSecondary,
+                          textDecorationLine: row.is_visible ? 'none' : 'line-through',
+                        },
+                      ]}
+                      numberOfLines={2}
+                      maxFontSizeMultiplier={1.3}
+                    >
+                      {row.section_name}
+                    </Text>
+                    {isCurrent ? (
+                      <Text style={[styles.sectionPositionCurrentTag, { color: theme.colors.primary }]} maxFontSizeMultiplier={1.2}>
+                        Current
+                      </Text>
+                    ) : null}
+                  </TouchableOpacity>
+                );
+              })}
             </ScrollView>
           </View>
         </View>
@@ -7269,6 +7295,45 @@ const styles = StyleSheet.create({
   },
   sectionOrder: {
     fontSize: 12,
+    fontWeight: '600',
+  },
+  sectionOrderButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 4,
+    marginTop: 2,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  sectionPositionList: {
+    maxHeight: 360,
+    paddingBottom: 16,
+  },
+  sectionPositionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  sectionPositionNumber: {
+    width: 32,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  sectionPositionName: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  sectionPositionCurrentTag: {
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
   },
   headerActions: {
     flexDirection: 'row',
