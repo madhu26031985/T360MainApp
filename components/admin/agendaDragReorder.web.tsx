@@ -378,6 +378,7 @@ function WebPointerDragList<T>({
   if (asScrollView) {
     return (
       <ScrollView
+        ref={agendaScrollRef ?? undefined}
         style={style}
         contentContainerStyle={contentContainerStyle}
         showsVerticalScrollIndicator={showsVerticalScrollIndicator}

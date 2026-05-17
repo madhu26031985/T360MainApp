@@ -340,6 +340,7 @@ export default function AgendaEditor() {
   const agendaItemsRef = useRef<AgendaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const agendaScrollRef = useRef<ScrollViewType>(null);
+  const manageSequenceScrollRef = useRef<ScrollViewType>(null);
   const [saving, setSaving] = useState(false);
   const isRecalculatingRef = useRef(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -6398,12 +6399,15 @@ export default function AgendaEditor() {
               </TouchableOpacity>
             </View>
             <Text style={[styles.manageSequenceSubtitle, { color: theme.colors.textSecondary }]} maxFontSizeMultiplier={1.3}>
-              Press and hold a section until it highlights, then drag to reorder. Changes save automatically.
+              Press and hold anywhere on a row until it highlights, then drag up or down. Move near the top or bottom to scroll.
             </Text>
+            <AgendaDragScrollContext.Provider value={manageSequenceScrollRef}>
             <DraggableFlatList
               data={agendaItems}
               keyExtractor={(item) => item.id}
               activationDistance={12}
+              autoscrollThreshold={72}
+              autoscrollSpeed={220}
               onDragEnd={({ data }) => {
                 void reorderAgendaItems(data);
                 clearSectionDragArmState();
@@ -6424,66 +6428,82 @@ export default function AgendaEditor() {
                 const isReady = handle.isReady && !isDraggingRow;
                 return (
                   <ScaleDecorator>
-                    <Pressable
-                      onPressIn={(e) => handle.onDragPressIn(e.nativeEvent.pageY)}
-                      onPressOut={handle.onDragPressOut}
-                      onLongPress={handle.onDragLongPress ?? handle.drag}
-                      delayLongPress={AGENDA_SECTION_LONG_PRESS_MS}
-                      style={[
-                        styles.manageSequenceRow,
-                        isDraggingRow && styles.agendaCardDragging,
-                        isPressing && { backgroundColor: theme.colors.primary + '14' },
-                        isReady && {
-                          backgroundColor: theme.colors.primary + '32',
-                          borderColor: theme.colors.primary,
-                          borderLeftWidth: 4,
-                        },
-                        { borderBottomColor: theme.colors.border },
-                      ]}
-                      accessibilityLabel={`Press and hold to reorder ${item.section_name}`}
-                    >
-                      <GripVertical
-                        size={22}
-                        color={isReady || isDraggingRow ? theme.colors.primary : theme.colors.textSecondary}
-                      />
-                      <Text style={[styles.manageSequenceOrder, { color: theme.colors.textSecondary }]} maxFontSizeMultiplier={1.3}>
-                        {index + 1}
-                      </Text>
-                      <Text
+                    <View style={[styles.manageSequenceRow, { borderBottomColor: theme.colors.border }]}>
+                      <Pressable
+                        onPressIn={(e) => handle.onDragPressIn(e.nativeEvent.pageY)}
+                        onPressOut={handle.onDragPressOut}
+                        onLongPress={handle.onDragLongPress ?? handle.drag}
+                        delayLongPress={AGENDA_SECTION_LONG_PRESS_MS}
                         style={[
-                          styles.manageSequenceName,
-                          {
-                            color: item.is_visible ? theme.colors.text : theme.colors.textSecondary,
-                            textDecorationLine: item.is_visible ? 'none' : 'line-through',
+                          styles.manageSequenceDragZone,
+                          isDraggingRow && styles.agendaCardDragging,
+                          isPressing && { backgroundColor: theme.colors.primary + '14' },
+                          isReady && {
+                            backgroundColor: theme.colors.primary + '32',
+                            borderColor: theme.colors.primary,
+                            borderLeftWidth: 4,
                           },
+                          isDraggingRow && {
+                            backgroundColor: theme.colors.primary + '22',
+                            borderColor: theme.colors.primary,
+                          },
+                          Platform.OS === 'web' &&
+                            (isReady || isDraggingRow) && ({
+                              cursor: isDraggingRow ? 'grabbing' : 'grab',
+                              userSelect: 'none',
+                            } as const),
                         ]}
-                        numberOfLines={2}
-                        maxFontSizeMultiplier={1.3}
+                        accessibilityLabel={`Press and hold to reorder ${item.section_name}`}
                       >
-                        {item.section_name}
-                      </Text>
-                      {isReady && !isDraggingRow ? (
-                        <Text style={[styles.manageSequenceReadyHint, { color: theme.colors.primary }]} maxFontSizeMultiplier={1.2}>
-                          Drag ↑↓
+                        <GripVertical
+                          size={22}
+                          color={isReady || isDraggingRow ? theme.colors.primary : theme.colors.textSecondary}
+                        />
+                        <Text style={[styles.manageSequenceOrder, { color: theme.colors.textSecondary }]} maxFontSizeMultiplier={1.3}>
+                          {index + 1}
                         </Text>
-                      ) : null}
-                      <View style={styles.manageSequenceActions}>
-                        <TouchableOpacity
-                          onPress={() => toggleVisibility(item.id)}
-                          style={styles.manageSequenceEye}
-                        >
-                          {item.is_visible ? (
-                            <Eye size={18} color={theme.colors.primary} />
-                          ) : (
-                            <EyeOff size={18} color={theme.colors.textSecondary} />
-                          )}
-                        </TouchableOpacity>
-                      </View>
-                    </Pressable>
+                        <View style={styles.manageSequenceDragZoneText}>
+                          <Text
+                            style={[
+                              styles.manageSequenceName,
+                              {
+                                color: item.is_visible ? theme.colors.text : theme.colors.textSecondary,
+                                textDecorationLine: item.is_visible ? 'none' : 'line-through',
+                              },
+                            ]}
+                            numberOfLines={2}
+                            maxFontSizeMultiplier={1.3}
+                          >
+                            {item.section_name}
+                          </Text>
+                          {isReady && !isDraggingRow ? (
+                            <Text style={[styles.manageSequenceReadyHint, { color: theme.colors.primary }]} maxFontSizeMultiplier={1.2}>
+                              Ready — drag up or down
+                            </Text>
+                          ) : isPressing && !isReady ? (
+                            <Text style={[styles.manageSequenceReadyHint, { color: theme.colors.textSecondary }]} maxFontSizeMultiplier={1.2}>
+                              Keep holding…
+                            </Text>
+                          ) : null}
+                        </View>
+                      </Pressable>
+                      <TouchableOpacity
+                        onPress={() => toggleVisibility(item.id)}
+                        style={styles.manageSequenceEye}
+                        accessibilityLabel={item.is_visible ? 'Hide section' : 'Show section'}
+                      >
+                        {item.is_visible ? (
+                          <Eye size={18} color={theme.colors.primary} />
+                        ) : (
+                          <EyeOff size={18} color={theme.colors.textSecondary} />
+                        )}
+                      </TouchableOpacity>
+                    </View>
                   </ScaleDecorator>
                 );
               }}
             />
+            </AgendaDragScrollContext.Provider>
             <TouchableOpacity
               onPress={() => setManageSequenceModalVisible(false)}
               style={[styles.manageSequenceDoneButton, { backgroundColor: theme.colors.primary, borderTopColor: theme.colors.border }]}
@@ -7806,14 +7826,25 @@ const styles = StyleSheet.create({
   },
   manageSequenceRow: {
     flexDirection: 'row',
+    alignItems: 'stretch',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    marginBottom: 0,
+  },
+  manageSequenceDragZone: {
+    flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     paddingVertical: 12,
     paddingHorizontal: 14,
-    borderRadius: 0,
-    borderWidth: 0,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    marginBottom: 0,
+    minHeight: 52,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  manageSequenceDragZoneText: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2,
   },
   manageSequenceOrder: {
     width: 28,
@@ -7826,17 +7857,14 @@ const styles = StyleSheet.create({
     marginRight: 4,
   },
   manageSequenceName: {
-    flex: 1,
     fontSize: 14,
     fontWeight: '500',
   },
-  manageSequenceActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
-  },
   manageSequenceEye: {
-    padding: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    alignSelf: 'stretch',
+    justifyContent: 'center',
   },
   manageSequenceArrow: {
     padding: 6,
