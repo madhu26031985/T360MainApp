@@ -12,7 +12,7 @@ import { useState, useEffect } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/lib/supabase';
-import { ArrowLeft, ChartBar as BarChart3, Users, Vote, Calendar, Building2, Clock } from 'lucide-react-native';
+import { ArrowLeft, Users, Vote, Calendar, Building2, Clock } from 'lucide-react-native';
 
 /** Notion-like neutrals (aligned with voting-operations); pair with theme for surfaces in dark mode. */
 const N = {
@@ -46,6 +46,8 @@ interface Poll {
   created_at: string;
   end_time: string | null;
   club_id: string;
+  created_by: string | null;
+  closed_by: string | null;
 }
 
 interface ClubProfileRow {
@@ -117,6 +119,37 @@ function formatMeetingDate(dateStr: string): string {
   }
 }
 
+function formatPollDate(iso: string | null | undefined): string {
+  if (!iso) return '—';
+  try {
+    return new Date(iso).toLocaleDateString();
+  } catch {
+    return iso;
+  }
+}
+
+async function resolveProfileNames(userIds: string[]): Promise<Map<string, string>> {
+  const unique = [...new Set(userIds.filter(Boolean))];
+  const map = new Map<string, string>();
+  if (unique.length === 0) return map;
+
+  const { data, error } = await supabase
+    .from('app_user_profiles')
+    .select('id, full_name')
+    .in('id', unique);
+
+  if (error) {
+    console.error('Error loading profile names:', error);
+    return map;
+  }
+
+  for (const row of data || []) {
+    const name = (row as { id: string; full_name: string | null }).full_name?.trim();
+    if (name) map.set((row as { id: string }).id, name);
+  }
+  return map;
+}
+
 export default function PollResults() {
   const { theme } = useTheme();
   const params = useLocalSearchParams();
@@ -128,6 +161,8 @@ export default function PollResults() {
   const [totalVotes, setTotalVotes] = useState(0);
   const [club, setClub] = useState<ClubProfileRow | null>(null);
   const [meeting, setMeeting] = useState<MeetingSummary | null>(null);
+  const [createdByName, setCreatedByName] = useState<string | null>(null);
+  const [closedByName, setClosedByName] = useState<string | null>(null);
 
   const pageBg = theme.dark ? theme.colors.background : N.pageLight;
   const border = theme.colors.border;
@@ -150,7 +185,7 @@ export default function PollResults() {
     try {
       const { data: pollData, error: pollError } = await supabase
         .from('polls')
-        .select('id, title, description, created_at, end_time, club_id')
+        .select('id, title, description, created_at, end_time, club_id, created_by, closed_by')
         .eq('id', pollId)
         .single();
 
@@ -188,6 +223,11 @@ export default function PollResults() {
 
       const meetingList = (meetingsRes.data || []) as MeetingSummary[];
       setMeeting(pickMeetingForPoll(p, meetingList));
+
+      const profileIds = [p.created_by, p.closed_by].filter((id): id is string => Boolean(id));
+      const nameMap = await resolveProfileNames(profileIds);
+      setCreatedByName(p.created_by ? nameMap.get(p.created_by) ?? null : null);
+      setClosedByName(p.closed_by ? nameMap.get(p.closed_by) ?? null : null);
 
       if (resultsRes.error) {
         console.error('Error loading poll results:', resultsRes.error);
@@ -328,11 +368,24 @@ export default function PollResults() {
             </Text>
             {meeting ? (
               <View style={styles.meetingBlock}>
-                <Text style={[styles.meetingTitle, { color: text }]} maxFontSizeMultiplier={1.3}>
-                  {meeting.meeting_number != null && String(meeting.meeting_number).trim() !== ''
-                    ? `Meeting ${meeting.meeting_number}: ${meeting.meeting_title}`
-                    : meeting.meeting_title}
-                </Text>
+                <View style={styles.labelValueRow}>
+                  <Text style={[styles.labelValueLabel, { color: textSecondary }]} maxFontSizeMultiplier={1.3}>
+                    Meeting title :
+                  </Text>
+                  <Text style={[styles.labelValueText, { color: text }]} maxFontSizeMultiplier={1.3}>
+                    {meeting.meeting_title?.trim() || '—'}
+                  </Text>
+                </View>
+                <View style={styles.labelValueRow}>
+                  <Text style={[styles.labelValueLabel, { color: textSecondary }]} maxFontSizeMultiplier={1.3}>
+                    Meeting number :
+                  </Text>
+                  <Text style={[styles.labelValueText, { color: text }]} maxFontSizeMultiplier={1.3}>
+                    {meeting.meeting_number != null && String(meeting.meeting_number).trim() !== ''
+                      ? String(meeting.meeting_number)
+                      : '—'}
+                  </Text>
+                </View>
                 <View style={styles.meetingMetaRow}>
                   <Calendar size={13} color={textSecondary} />
                   <Text style={[styles.meetingMetaText, { color: textSecondary }]} maxFontSizeMultiplier={1.3}>
@@ -366,14 +419,6 @@ export default function PollResults() {
 
           {/* Poll summary */}
           <View style={styles.section}>
-            <View style={styles.pollTitleRow}>
-              <View style={[styles.iconTile, { backgroundColor: N.accentSoft }]}>
-                <BarChart3 size={18} color={N.accent} />
-              </View>
-              <Text style={[styles.pollTitle, { color: text }]} maxFontSizeMultiplier={1.25}>
-                {poll.title}
-              </Text>
-            </View>
             {poll.description ? (
               <Text style={[styles.pollDescription, { color: textSecondary }]} maxFontSizeMultiplier={1.3}>
                 {poll.description}
@@ -383,17 +428,33 @@ export default function PollResults() {
               <View style={styles.pollDateRow}>
                 <Calendar size={12} color={textSecondary} />
                 <Text style={[styles.pollDateText, { color: textSecondary }]} maxFontSizeMultiplier={1.3}>
-                  Created {poll.created_at ? new Date(poll.created_at).toLocaleDateString() : '—'}
+                  Created {formatPollDate(poll.created_at)}
                 </Text>
               </View>
               {poll.end_time ? (
                 <View style={styles.pollDateRow}>
                   <Vote size={12} color={textSecondary} />
                   <Text style={[styles.pollDateText, { color: textSecondary }]} maxFontSizeMultiplier={1.3}>
-                    Closed {new Date(poll.end_time).toLocaleDateString()}
+                    Closed {formatPollDate(poll.end_time)}
                   </Text>
                 </View>
               ) : null}
+              <View style={styles.labelValueRow}>
+                <Text style={[styles.labelValueLabel, { color: textSecondary }]} maxFontSizeMultiplier={1.3}>
+                  Created by :
+                </Text>
+                <Text style={[styles.labelValueText, { color: text }]} maxFontSizeMultiplier={1.3}>
+                  {createdByName?.trim() || '—'}
+                </Text>
+              </View>
+              <View style={styles.labelValueRow}>
+                <Text style={[styles.labelValueLabel, { color: textSecondary }]} maxFontSizeMultiplier={1.3}>
+                  Closed by :
+                </Text>
+                <Text style={[styles.labelValueText, { color: text }]} maxFontSizeMultiplier={1.3}>
+                  {poll.end_time ? closedByName?.trim() || '—' : '—'}
+                </Text>
+              </View>
             </View>
             <View style={[styles.totalVotesRow, { borderTopColor: border }]}>
               <Users size={16} color={theme.colors.primary} />
@@ -576,12 +637,22 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   meetingBlock: {
-    gap: 6,
+    gap: 8,
   },
-  meetingTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    lineHeight: 21,
+  labelValueRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 6,
+    flexWrap: 'wrap',
+  },
+  labelValueLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  labelValueText: {
+    fontSize: 13,
+    fontWeight: '500',
+    flex: 1,
   },
   meetingMetaRow: {
     flexDirection: 'row',
@@ -600,26 +671,13 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 19,
   },
-  pollTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-    marginBottom: 8,
-  },
-  pollTitle: {
-    flex: 1,
-    fontSize: 17,
-    fontWeight: '700',
-    lineHeight: 24,
-    letterSpacing: -0.2,
-  },
   pollDescription: {
     fontSize: 14,
     lineHeight: 20,
     marginBottom: 10,
   },
   pollDates: {
-    gap: 6,
+    gap: 8,
     marginBottom: 12,
   },
   pollDateRow: {

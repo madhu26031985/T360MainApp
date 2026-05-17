@@ -2098,6 +2098,8 @@ export default function MyJourney() {
               )}
                   </TouchableOpacity>
 
+              {currentOpenMeetingId ? (
+                <>
               <View style={[styles.meetingActionsDivider, { backgroundColor: N.border }]} />
 
               <TouchableOpacity
@@ -2245,6 +2247,8 @@ export default function MyJourney() {
                   )}
                 </View>
               </TouchableOpacity>
+                </>
+              ) : null}
 
             </View>
           </>

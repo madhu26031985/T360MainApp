@@ -29,7 +29,6 @@ export function computeVpeSmartDailyHomeReminder(
       text: '💡 VPE Smart Insight to help you fill roles faster',
     };
   }
-  return {
-    text: `💡 Smart Daily Insights\nMeeting in ${daysUntil} days · nudges start 7 days before. Tap to preview.`,
-  };
+  // No home reminder when the meeting is more than 7 days away (nudges start inside that window).
+  return null;
 }

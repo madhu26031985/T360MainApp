@@ -742,9 +742,10 @@ export default function VotingOperations() {
     try {
       const { error } = await supabase
         .from('polls')
-        .update({ 
+        .update({
           status: 'completed',
-          end_time: new Date().toISOString()
+          end_time: new Date().toISOString(),
+          closed_by: user?.id ?? null,
         } as any)
         .eq('id', poll.id);
 
