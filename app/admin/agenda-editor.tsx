@@ -3,6 +3,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
+  type ScrollView as ScrollViewType,
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
@@ -25,6 +26,7 @@ import {
   AGENDA_SECTION_LONG_PRESS_MS,
   type AgendaSectionDragHandle,
 } from '@/components/admin/agendaSectionDragTypes';
+import { AgendaDragScrollContext } from '@/components/admin/agendaDragScrollContext';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
@@ -337,6 +339,7 @@ export default function AgendaEditor() {
   const [agendaItems, setAgendaItems] = useState<AgendaItem[]>([]);
   const agendaItemsRef = useRef<AgendaItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const agendaScrollRef = useRef<ScrollViewType>(null);
   const [saving, setSaving] = useState(false);
   const isRecalculatingRef = useRef(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -5672,10 +5675,12 @@ export default function AgendaEditor() {
         </TouchableOpacity>
       </View>
 
+      <AgendaDragScrollContext.Provider value={agendaScrollRef}>
       <NestableScrollContainer
+        ref={agendaScrollRef}
         style={styles.content}
         contentContainerStyle={{ paddingBottom: 88 + footerNavBottomPad }}
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={true}
         keyboardShouldPersistTaps="handled"
       >
         {agendaEditorTab === 'settings' ? (
@@ -6102,7 +6107,7 @@ export default function AgendaEditor() {
           >
             <GripVertical size={16} color={theme.colors.textSecondary} />
             <Text style={[styles.sectionDragHintText, { color: theme.colors.textSecondary }]} maxFontSizeMultiplier={1.3}>
-              Press and hold a section title until it highlights, then drag up or down to reorder.
+              Press and hold a section title until it highlights, then drag up or down. Move near the top or bottom of the screen to scroll while dragging.
             </Text>
           </View>
         )}
@@ -6168,6 +6173,7 @@ export default function AgendaEditor() {
 
         <View style={styles.bottomSpace} />
       </NestableScrollContainer>
+      </AgendaDragScrollContext.Provider>
 
       <View
         style={[

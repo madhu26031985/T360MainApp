@@ -1,18 +1,26 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { forwardRef, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { ScrollView, View, type ScrollViewProps, type View as RNView } from 'react-native';
 import {
   AGENDA_SECTION_LONG_PRESS_MS,
   type AgendaSectionDragHandle,
 } from '@/components/admin/agendaSectionDragTypes';
+import { useAgendaDragScrollRef } from '@/components/admin/agendaDragScrollContext';
 
-export const NestableScrollContainer = ScrollView;
+export const NestableScrollContainer = forwardRef<ScrollView, ScrollViewProps>(function NestableScrollContainer(
+  props,
+  ref,
+) {
+  return <ScrollView ref={ref} {...props} />;
+});
 
 export function ScaleDecorator({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
 const DRAG_START_DELTA_PX = 10;
-const SWAP_THROTTLE_MS = 90;
+const SWAP_THROTTLE_MS = 60;
+const SCROLL_EDGE_PX = 88;
+const SCROLL_MAX_SPEED = 20;
 
 export type AgendaDragRenderInfo<T> = {
   item: T;
@@ -29,6 +37,36 @@ type DragListProps<T> = {
   showsVerticalScrollIndicator?: boolean;
   keyboardShouldPersistTaps?: ScrollViewProps['keyboardShouldPersistTaps'];
 };
+
+function findScrollableParent(start: HTMLElement | null): HTMLElement | null {
+  let node = start;
+  while (node && node !== document.body) {
+    if (node.scrollHeight > node.clientHeight + 2) {
+      return node;
+    }
+    node = node.parentElement;
+  }
+  return (document.scrollingElement as HTMLElement | null) ?? document.documentElement;
+}
+
+function resolveScrollElement(
+  rowNode: HTMLElement | null,
+  scrollViewRef: ReturnType<typeof useAgendaDragScrollRef>,
+): HTMLElement | null {
+  const scrollView = scrollViewRef?.current;
+  if (scrollView) {
+    const node = (
+      scrollView as ScrollView & { getScrollableNode?: () => HTMLElement }
+    ).getScrollableNode?.();
+    if (node && node.scrollHeight > node.clientHeight + 2) return node;
+  }
+  return findScrollableParent(rowNode);
+}
+
+function getDomRect(node: RNView | null | undefined): DOMRect | null {
+  const el = node as unknown as HTMLElement | null;
+  return el?.getBoundingClientRect?.() ?? null;
+}
 
 function WebPointerDragList<T>({
   data,
@@ -52,8 +90,12 @@ function WebPointerDragList<T>({
   const rowRefs = useRef<Map<string, RNView | null>>(new Map());
   const armTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pressStartYRef = useRef(0);
+  const lastPointerYRef = useRef(0);
   const lastSwapAtRef = useRef(0);
+  const scrollParentRef = useRef<HTMLElement | null>(null);
+  const autoScrollRafRef = useRef<number | null>(null);
   const detachWindowListeners = useRef<(() => void) | null>(null);
+  const agendaScrollRef = useAgendaDragScrollRef();
 
   useEffect(() => {
     setItems(data);
@@ -78,6 +120,14 @@ function WebPointerDragList<T>({
     }
   };
 
+  const stopAutoScroll = useCallback(() => {
+    if (autoScrollRafRef.current != null) {
+      cancelAnimationFrame(autoScrollRafRef.current);
+      autoScrollRafRef.current = null;
+    }
+    scrollParentRef.current = null;
+  }, []);
+
   const detachListeners = useCallback(() => {
     detachWindowListeners.current?.();
     detachWindowListeners.current = null;
@@ -92,9 +142,34 @@ function WebPointerDragList<T>({
     setDraggingId(null);
   }, []);
 
+  const autoScrollForPointer = useCallback((clientY: number) => {
+    const scroller = scrollParentRef.current;
+    if (!scroller) return;
+    const rect = scroller.getBoundingClientRect();
+    if (clientY < rect.top + SCROLL_EDGE_PX) {
+      scroller.scrollTop -= SCROLL_MAX_SPEED;
+    } else if (clientY > rect.bottom - SCROLL_EDGE_PX) {
+      scroller.scrollTop += SCROLL_MAX_SPEED;
+    }
+  }, []);
+
+  const startAutoScrollLoop = useCallback(() => {
+    const tick = () => {
+      if (!draggingIdRef.current) {
+        autoScrollRafRef.current = null;
+        return;
+      }
+      autoScrollForPointer(lastPointerYRef.current);
+      autoScrollRafRef.current = requestAnimationFrame(tick);
+    };
+    if (autoScrollRafRef.current != null) cancelAnimationFrame(autoScrollRafRef.current);
+    autoScrollRafRef.current = requestAnimationFrame(tick);
+  }, [autoScrollForPointer]);
+
   const finishInteraction = useCallback(
     (notifyParent: boolean) => {
       detachListeners();
+      stopAutoScroll();
       const wasDragging = draggingIdRef.current != null;
       resetInteractionState();
       setInteractionEpoch((n) => n + 1);
@@ -102,40 +177,48 @@ function WebPointerDragList<T>({
         onDragEnd({ data: itemsRef.current });
       }
     },
-    [detachListeners, onDragEnd, resetInteractionState],
-  );
-
-  const resolveHoverIndex = useCallback(
-    (clientY: number) => {
-      const list = itemsRef.current;
-      for (let i = 0; i < list.length; i++) {
-        const node = rowRefs.current.get(keyExtractor(list[i])) as unknown as HTMLElement | null;
-        const rect = node?.getBoundingClientRect?.();
-        if (!rect) continue;
-        const mid = rect.top + rect.height / 2;
-        if (clientY < mid) return i;
-      }
-      return Math.max(0, list.length - 1);
-    },
-    [keyExtractor],
+    [detachListeners, onDragEnd, resetInteractionState, stopAutoScroll],
   );
 
   const pointerY = (e: MouseEvent | TouchEvent) =>
     'touches' in e && e.touches.length > 0 ? e.touches[0].clientY : (e as MouseEvent).clientY;
 
-  const swapDraggingItemToIndex = useCallback(
-    (id: string, hoverIndex: number) => {
+  /** Swap one step toward pointer — works reliably for both up and down. */
+  const moveDraggedItemTowardPointer = useCallback(
+    (id: string, clientY: number) => {
       const now = Date.now();
       if (now - lastSwapAtRef.current < SWAP_THROTTLE_MS) return;
-      setItems((prev) => {
-        const from = prev.findIndex((row) => keyExtractor(row) === id);
-        if (from < 0 || from === hoverIndex) return prev;
-        lastSwapAtRef.current = now;
-        const next = [...prev];
-        const [removed] = next.splice(from, 1);
-        next.splice(hoverIndex, 0, removed);
-        return next;
-      });
+
+      const list = itemsRef.current;
+      const from = list.findIndex((row) => keyExtractor(row) === id);
+      if (from < 0) return;
+
+      if (from > 0) {
+        const prevId = keyExtractor(list[from - 1]);
+        const prevRect = getDomRect(rowRefs.current.get(prevId));
+        if (prevRect && clientY < prevRect.top + prevRect.height * 0.5) {
+          lastSwapAtRef.current = now;
+          setItems((prev) => {
+            const next = [...prev];
+            [next[from - 1], next[from]] = [next[from], next[from - 1]];
+            return next;
+          });
+          return;
+        }
+      }
+
+      if (from < list.length - 1) {
+        const nextId = keyExtractor(list[from + 1]);
+        const nextRect = getDomRect(rowRefs.current.get(nextId));
+        if (nextRect && clientY > nextRect.top + nextRect.height * 0.5) {
+          lastSwapAtRef.current = now;
+          setItems((prev) => {
+            const next = [...prev];
+            [next[from], next[from + 1]] = [next[from + 1], next[from]];
+            return next;
+          });
+        }
+      }
     },
     [keyExtractor],
   );
@@ -152,9 +235,16 @@ function WebPointerDragList<T>({
       setPressingId(null);
       setReadyId(null);
 
+      const rowNode = rowRefs.current.get(id) as unknown as HTMLElement | null;
+      scrollParentRef.current = resolveScrollElement(rowNode, agendaScrollRef);
+      startAutoScrollLoop();
+
       const onPointerMove = (e: MouseEvent | TouchEvent) => {
         e.preventDefault();
-        swapDraggingItemToIndex(id, resolveHoverIndex(pointerY(e)));
+        const y = pointerY(e);
+        lastPointerYRef.current = y;
+        autoScrollForPointer(y);
+        moveDraggedItemTowardPointer(id, y);
       };
 
       const onPointerEnd = () => {
@@ -176,7 +266,15 @@ function WebPointerDragList<T>({
         window.removeEventListener('touchcancel', onPointerEnd);
       };
     },
-    [detachListeners, finishInteraction, keyExtractor, resolveHoverIndex, swapDraggingItemToIndex],
+    [
+      detachListeners,
+      finishInteraction,
+      keyExtractor,
+      moveDraggedItemTowardPointer,
+      autoScrollForPointer,
+      startAutoScrollLoop,
+      agendaScrollRef,
+    ],
   );
 
   const attachArmListeners = useCallback(
@@ -224,6 +322,7 @@ function WebPointerDragList<T>({
       detachListeners();
       resetInteractionState();
       pressStartYRef.current = startY;
+      lastPointerYRef.current = startY;
       setPressingId(id);
       attachArmListeners(item);
 
@@ -243,9 +342,10 @@ function WebPointerDragList<T>({
   useEffect(
     () => () => {
       detachListeners();
+      stopAutoScroll();
       clearArmTimer();
     },
-    [detachListeners],
+    [detachListeners, stopAutoScroll],
   );
 
   const rows = items.map((item) => {
