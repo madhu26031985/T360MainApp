@@ -3,7 +3,11 @@ import { supabase } from '@/lib/supabase';
 export const journeyHomeQueryKeys = {
   all: ['journey-home'] as const,
   snapshot: (clubId: string, userId: string) => [...journeyHomeQueryKeys.all, 'snapshot', clubId, userId] as const,
+  openMeetingsList: (clubId: string, excludeMeetingId: string) =>
+    [...journeyHomeQueryKeys.all, 'open-meetings-list', clubId, excludeMeetingId] as const,
 };
+
+export type HomeOpenMeetingListItem = JourneyHomeOpenMeeting & { id: string };
 
 export type JourneyHomeOpenMeeting = {
   id: string;
@@ -162,4 +166,38 @@ export async function fetchJourneyHomeSnapshot(clubId: string, userId: string): 
   }
 
   return fetchJourneyHomeLegacy(clubId, userId);
+}
+
+/** Other open meetings for Home "Next Meetings" when the club has three open (hero excludes one). */
+export async function fetchHomeOpenMeetingsExcept(
+  clubId: string,
+  excludeMeetingId: string | null
+): Promise<HomeOpenMeetingListItem[]> {
+  const fourHoursAgo = new Date();
+  fourHoursAgo.setHours(fourHoursAgo.getHours() - 4);
+  const cutoffDate = fourHoursAgo.toISOString().split('T')[0];
+
+  const { data, error } = await supabase
+    .from('app_club_meeting')
+    .select('id, meeting_title, meeting_date, meeting_start_time, meeting_end_time, meeting_mode')
+    .eq('club_id', clubId)
+    .eq('meeting_status', 'open')
+    .gte('meeting_date', cutoffDate)
+    .order('meeting_date', { ascending: true })
+    .order('meeting_start_time', { ascending: true });
+
+  if (error) {
+    console.error('Error loading home open meetings list:', error);
+    return [];
+  }
+
+  const now = new Date();
+  return (data || []).filter((meeting) => {
+    if (excludeMeetingId && meeting.id === excludeMeetingId) return false;
+    const meetingEndDateTime = new Date(
+      `${meeting.meeting_date}T${meeting.meeting_end_time || '23:59:59'}`
+    );
+    const hoursSinceMeetingEnd = (now.getTime() - meetingEndDateTime.getTime()) / (1000 * 60 * 60);
+    return hoursSinceMeetingEnd < 4;
+  }) as HomeOpenMeetingListItem[];
 }

@@ -27,6 +27,8 @@ import {
   FileText,
   ClipboardCheck,
   ChevronRight,
+  ChevronDown,
+  Lock,
   MessageSquare,
   Mic,
   GraduationCap,
@@ -69,7 +71,12 @@ import { prefetchTimerReport } from '@/lib/prefetchTimerReport';
 import { prefetchToastmasterCorner } from '@/lib/prefetchToastmasterCorner';
 import { prefetchEvaluationCornerSnapshot } from '@/lib/evaluationCornerSnapshot';
 import { prefetchMeetingAgendaView } from '@/lib/meetingAgendaPrefetch';
-import { journeyHomeQueryKeys, fetchJourneyHomeSnapshot } from '@/lib/journeyHomeQuery';
+import {
+  journeyHomeQueryKeys,
+  fetchJourneyHomeSnapshot,
+  fetchHomeOpenMeetingsExcept,
+  type HomeOpenMeetingListItem,
+} from '@/lib/journeyHomeQuery';
 import { fetchVpeNudgesSnapshot, vpeNudgesQueryKeys } from '@/lib/vpeNudgesSnapshot';
 import { computeVpeSmartDailyHomeReminder } from '@/lib/vpeSmartDailyHomeReminder';
 import { prefetchVpeNudges } from '@/lib/prefetchVpeNudges';
@@ -540,6 +547,18 @@ export default function MyJourney() {
     staleTime: 60 * 1000,
   });
 
+  const openMeetingsCount = journeyHomeSnapshot?.open_meetings_count ?? 0;
+  const showHomeNextMeetingsSection = Boolean(currentOpenMeetingId && openMeetingsCount >= 3);
+
+  const { data: homeOtherOpenMeetings = [] } = useQuery({
+    queryKey: journeyHomeQueryKeys.openMeetingsList(user?.currentClubId ?? '', currentOpenMeetingId ?? ''),
+    queryFn: () => fetchHomeOpenMeetingsExcept(user!.currentClubId!, currentOpenMeetingId),
+    enabled: Boolean(
+      isAuthenticated && user?.currentClubId && currentOpenMeetingId && openMeetingsCount >= 3
+    ),
+    staleTime: 30 * 1000,
+  });
+
   useEffect(() => {
     if (!journeyHomeSnapshot) return;
     const d = journeyHomeSnapshot;
@@ -689,6 +708,57 @@ export default function MyJourney() {
     if (mode === 'online') return 'Online';
     if (mode === 'hybrid') return 'Hybrid';
     return mode;
+  };
+
+  const renderHomeOpenMeetingCard = (meeting: HomeOpenMeetingListItem) => {
+    const meetingDate = new Date(meeting.meeting_date);
+    const dayNum = meetingDate.getDate();
+    const month = meetingDate.toLocaleString('default', { month: 'short' }).toUpperCase();
+
+    return (
+      <View
+        key={meeting.id}
+        style={[styles.homeNextMeetingCard, { backgroundColor: N.surface, borderColor: N.border }]}
+      >
+        <View style={styles.homeNextMeetingCardRow}>
+          <View style={[styles.dateBadge, { backgroundColor: N.iconTile }]}>
+            <Text style={[styles.dateBadgeDay, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3}>
+              {dayNum}
+            </Text>
+            <Text style={[styles.dateBadgeMonth, { color: theme.colors.textSecondary }]} maxFontSizeMultiplier={1.3}>
+              {month}
+            </Text>
+          </View>
+          <View style={styles.heroMeetingInfo}>
+            <Text style={[styles.heroMeetingTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3} numberOfLines={1}>
+              {meeting.meeting_title}
+            </Text>
+            <Text style={[styles.heroMeetingTime, { color: theme.colors.textSecondary }]} maxFontSizeMultiplier={1.2}>
+              Day: {meetingDate.toLocaleDateString('default', { weekday: 'long' })}
+            </Text>
+            {(meeting.meeting_start_time || meeting.meeting_end_time) && (
+              <Text style={[styles.heroMeetingTime, { color: theme.colors.textSecondary }]} maxFontSizeMultiplier={1.2}>
+                Time: {formatTime(meeting.meeting_start_time)}
+                {meeting.meeting_end_time ? ` - ${formatTime(meeting.meeting_end_time)}` : ''}
+              </Text>
+            )}
+            <Text style={[styles.heroMeetingMode, { color: theme.colors.textSecondary }]} maxFontSizeMultiplier={1.2}>
+              Mode: {formatMeetingMode(meeting.meeting_mode)}
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={[styles.homeNextMeetingOpenBtn, { backgroundColor: theme.colors.primary }]}
+            onPress={() => router.push('/(tabs)/meetings')}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.homeNextMeetingOpenBtnText} maxFontSizeMultiplier={1.2}>
+              Open
+            </Text>
+            <ChevronDown size={12} color="#ffffff" />
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
   };
 
   useFocusEffect(
@@ -1361,6 +1431,43 @@ export default function MyJourney() {
     const fromField = user?.clubRole?.toLowerCase() === 'excomm';
     return fromList || fromField;
   }, [user?.clubs, user?.currentClubId, user?.clubRole]);
+
+  const canManageClubMeetings = isExComm || isVPEForCurrentClub;
+
+  const [clubVpeName, setClubVpeName] = useState('VPE');
+
+  const loadClubVpeName = useCallback(async () => {
+    if (!user?.currentClubId) return;
+    try {
+      const { data: clubProfile, error } = await supabase
+        .from('club_profiles')
+        .select(
+          `
+          vpe_id,
+          app_user_profiles!club_profiles_vpe_id_fkey (
+            full_name
+          )
+        `
+        )
+        .eq('club_id', user.currentClubId)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error loading VPE name for home:', error);
+        return;
+      }
+
+      const vpeProfile = clubProfile?.app_user_profiles as { full_name: string } | null;
+      const name = vpeProfile?.full_name?.trim();
+      if (name) setClubVpeName(name);
+    } catch (error) {
+      console.error('Error loading VPE name for home:', error);
+    }
+  }, [user?.currentClubId]);
+
+  useEffect(() => {
+    void loadClubVpeName();
+  }, [loadClubVpeName]);
 
   const openRolePlayerCongrats = useCallback(() => {
     setRolePlayerCongratsBody(pickRolePlayerCongratsMessage(userFirstName));
@@ -2049,7 +2156,13 @@ export default function MyJourney() {
                   {/* Meeting details */}
                   <TouchableOpacity
                     activeOpacity={0.7}
-                    onPress={() => router.push('/(tabs)/meetings')}
+                    onPress={() => {
+                      if (!currentOpenMeetingId && canManageClubMeetings) {
+                        router.push('/admin/meeting-management');
+                        return;
+                      }
+                      router.push('/(tabs)/meetings');
+                    }}
                     style={styles.meetingDetailsRow}
                   >
                   {currentOpenMeetingId ? (
@@ -2091,10 +2204,36 @@ export default function MyJourney() {
                     </Text>
                   </View>
                     </>
+              ) : canManageClubMeetings ? (
+                  <View style={styles.noOpenMeetingPlaceholder}>
+                    <View style={[styles.noOpenMeetingIcon, { backgroundColor: theme.colors.primary + '15' }]}>
+                      <Calendar size={22} color={theme.colors.primary} />
+                    </View>
+                    <View style={styles.noOpenMeetingPlaceholderText}>
+                      <Text
+                        style={[styles.noOpenMeetingPlaceholderTitle, { color: theme.colors.text }]}
+                        maxFontSizeMultiplier={1.2}
+                      >
+                        Create a new meeting
+                      </Text>
+                      <Text style={[styles.meetingBarSub, { color: theme.colors.textSecondary }]} maxFontSizeMultiplier={1.2}>
+                        Open Meeting Management to schedule your next club meeting.
+                      </Text>
+                    </View>
+                    <ChevronRight size={18} color={theme.colors.textSecondary} />
+                  </View>
               ) : (
-                  <Text style={[styles.meetingBarSub, { color: theme.colors.textSecondary }]} maxFontSizeMultiplier={1.2}>
-                    No meeting is open - Contact VPE
-                  </Text>
+                  <View style={styles.noOpenMeetingMemberMessage}>
+                    <Text style={[styles.meetingBarSub, { color: theme.colors.textSecondary }]} maxFontSizeMultiplier={1.2}>
+                      Your VPE is preparing upcoming meetings.
+                    </Text>
+                    <Text
+                      style={[styles.meetingBarSub, styles.noOpenMeetingMemberSubline, { color: theme.colors.textSecondary }]}
+                      maxFontSizeMultiplier={1.2}
+                    >
+                      {`Stay tuned or connect with ${clubVpeName} for details.`}
+                    </Text>
+                  </View>
               )}
                   </TouchableOpacity>
 
@@ -2247,6 +2386,39 @@ export default function MyJourney() {
                   )}
                 </View>
               </TouchableOpacity>
+
+              {showHomeNextMeetingsSection ? (
+                <>
+                  <View style={[styles.meetingActionsDivider, { backgroundColor: N.border }]} />
+                  <Text
+                    style={[styles.homeNextMeetingsSectionTitle, { color: theme.colors.text }]}
+                    maxFontSizeMultiplier={1.3}
+                  >
+                    Next Meetings
+                  </Text>
+                  <View style={styles.homeNextMeetingsList}>
+                    {homeOtherOpenMeetings.map((meeting) => renderHomeOpenMeetingCard(meeting))}
+                    {!canManageClubMeetings ? (
+                      <View style={[styles.homeNextMeetingCard, { backgroundColor: N.surface, borderColor: N.border }]}>
+                        <View style={styles.homeNextMeetingCardRow}>
+                          <View style={[styles.homeNextMeetingPlaceholderIcon, { backgroundColor: theme.colors.textSecondary + '15' }]}>
+                            <Lock size={20} color="#F59E0B" />
+                          </View>
+                          <View style={styles.heroMeetingInfo}>
+                            <Text style={[styles.noOpenMeetingPlaceholderTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.2}>
+                              Coming Soon
+                            </Text>
+                            <Text style={[styles.meetingBarSub, { color: theme.colors.textSecondary }]} maxFontSizeMultiplier={1.2}>
+                              Contact VPE:{' '}
+                              <Text style={{ color: theme.colors.primary, fontWeight: '600' }}>{clubVpeName}</Text>
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+                    ) : null}
+                  </View>
+                </>
+              ) : null}
                 </>
               ) : null}
 
@@ -2881,6 +3053,46 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#ffffff',
   },
+  homeNextMeetingsSectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 10,
+  },
+  homeNextMeetingsList: {
+    gap: 10,
+    marginBottom: 4,
+  },
+  homeNextMeetingCard: {
+    borderRadius: 4,
+    borderWidth: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  homeNextMeetingCardRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 11,
+  },
+  homeNextMeetingPlaceholderIcon: {
+    width: 49,
+    height: 49,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  homeNextMeetingOpenBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 4,
+  },
+  homeNextMeetingOpenBtnText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#ffffff',
+  },
   actionReminderHeroCard: {
     marginTop: 2,
     marginBottom: 4,
@@ -3005,6 +3217,36 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     lineHeight: 16,
+  },
+  noOpenMeetingPlaceholder: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 11,
+  },
+  noOpenMeetingIcon: {
+    width: 49,
+    height: 49,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  noOpenMeetingPlaceholderText: {
+    flex: 1,
+    minWidth: 0,
+  },
+  noOpenMeetingPlaceholderTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    lineHeight: 18,
+    marginBottom: 4,
+  },
+  noOpenMeetingMemberMessage: {
+    flex: 1,
+    minWidth: 0,
+  },
+  noOpenMeetingMemberSubline: {
+    marginTop: 4,
   },
 
   heroCardContent: {
