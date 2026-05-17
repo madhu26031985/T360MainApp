@@ -21,6 +21,10 @@ import {
   NestableScrollContainer,
   ScaleDecorator,
 } from '@/components/admin/agendaDragReorder';
+import {
+  AGENDA_SECTION_LONG_PRESS_MS,
+  type AgendaSectionDragHandle,
+} from '@/components/admin/agendaSectionDragTypes';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
@@ -417,6 +421,9 @@ export default function AgendaEditor() {
   const [sectionFilter, setSectionFilter] = useState<'all' | Set<string>>('all');
   const [sectionFilterModalVisible, setSectionFilterModalVisible] = useState(false);
   const [manageSequenceModalVisible, setManageSequenceModalVisible] = useState(false);
+  const [sectionDragPressingId, setSectionDragPressingId] = useState<string | null>(null);
+  const [sectionDragReadyId, setSectionDragReadyId] = useState<string | null>(null);
+  const sectionDragArmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [agendaEditorTab, setAgendaEditorTab] = useState<'settings' | 'sections'>('settings');
 
   /** Active booking only, latest row — avoids stale/cancelled duplicates. */
@@ -3508,6 +3515,54 @@ export default function AgendaEditor() {
   const isSectionSelected = (name: string) =>
     sectionFilter === 'all' || sectionFilter.has(name);
 
+  const clearSectionDragArmState = useCallback(() => {
+    if (sectionDragArmTimerRef.current) {
+      clearTimeout(sectionDragArmTimerRef.current);
+      sectionDragArmTimerRef.current = null;
+    }
+    setSectionDragPressingId(null);
+    setSectionDragReadyId(null);
+  }, []);
+
+  const handleSectionDragPressIn = useCallback((itemId: string) => {
+    if (sectionDragArmTimerRef.current) clearTimeout(sectionDragArmTimerRef.current);
+    setSectionDragPressingId(itemId);
+    setSectionDragReadyId(null);
+    sectionDragArmTimerRef.current = setTimeout(() => {
+      setSectionDragReadyId(itemId);
+    }, AGENDA_SECTION_LONG_PRESS_MS);
+  }, []);
+
+  const handleSectionDragPressOut = useCallback(
+    (isDragging: boolean) => {
+      if (sectionDragArmTimerRef.current) {
+        clearTimeout(sectionDragArmTimerRef.current);
+        sectionDragArmTimerRef.current = null;
+      }
+      if (!isDragging) {
+        setSectionDragPressingId(null);
+        setSectionDragReadyId(null);
+      }
+    },
+    [],
+  );
+
+  const buildNativeSectionDragHandle = useCallback(
+    (item: AgendaItem, drag: () => void, isActive: boolean): AgendaSectionDragHandle => ({
+      drag,
+      isActive,
+      isPressing: sectionDragPressingId === item.id && !isActive,
+      isReady: sectionDragReadyId === item.id && !isActive,
+      onDragPressIn: () => handleSectionDragPressIn(item.id),
+      onDragPressOut: () => handleSectionDragPressOut(isActive),
+      onDragLongPress: () => {
+        setSectionDragReadyId(item.id);
+        drag();
+      },
+    }),
+    [handleSectionDragPressIn, handleSectionDragPressOut, sectionDragPressingId, sectionDragReadyId],
+  );
+
   const reorderAgendaItems = async (orderedItems: AgendaItem[]) => {
     const reorderedItems = orderedItems.map((item, idx) => ({
       ...item,
@@ -3624,19 +3679,60 @@ export default function AgendaEditor() {
     item: AgendaItem,
     rowIndex: number,
     listLength: number,
-    dragHandle?: { drag: () => void; isActive: boolean },
+    dragHandle?: AgendaSectionDragHandle,
   ) => {
     const index =
       dragHandle != null ? rowIndex : agendaItems.findIndex((i) => i.id === item.id);
     const isLastRow = rowIndex === listLength - 1;
-    const drag = dragHandle?.drag;
-    const isActive = dragHandle?.isActive ?? false;
+    const isDragging = dragHandle?.isActive ?? false;
+    const isPressing = (dragHandle?.isPressing ?? false) && !isDragging;
+    const isReady = (dragHandle?.isReady ?? false) && !isDragging;
+
+    const sectionTitleBlock = (
+      <View style={styles.cardTitleRow}>
+        {item.section_name.toLowerCase().includes('tag team') ? (
+          <View style={[styles.tagTeamIconWrap, { backgroundColor: '#f59e0b18' }]}>
+            <Users2 size={22} color="#f59e0b" />
+          </View>
+        ) : item.section_icon ? (
+          <Text style={styles.sectionIcon} maxFontSizeMultiplier={1.3}>{item.section_icon}</Text>
+        ) : null}
+        <View style={styles.titleContainer}>
+          <View style={styles.titleWithTags}>
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3}>
+              {item.section_name}
+            </Text>
+            {getSectionTypeTag(item) && (
+              <View style={[styles.sectionTypeTag, {
+                backgroundColor: getSectionTypeTag(item)!.bgColor,
+                borderColor: getSectionTypeTag(item)!.color
+              }]}>
+                <Text style={[styles.sectionTypeTagText, {
+                  color: getSectionTypeTag(item)!.color
+                }]} maxFontSizeMultiplier={1.3}>
+                  {getSectionTypeTag(item)!.label}
+                </Text>
+              </View>
+            )}
+            {!item.is_visible && (
+              <View style={styles.hiddenBadge}>
+                <Text style={styles.hiddenBadgeText} maxFontSizeMultiplier={1.3}>HIDDEN</Text>
+              </View>
+            )}
+          </View>
+          <Text style={[styles.sectionOrder, { color: theme.colors.textSecondary }]} maxFontSizeMultiplier={1.3}>
+            Section {item.section_order}
+          </Text>
+        </View>
+      </View>
+    );
+
     return (
           <View
             style={[
               styles.agendaCard,
               { backgroundColor: theme.colors.surface },
-              isActive && styles.agendaCardDragging,
+              isDragging && styles.agendaCardDragging,
               !isLastRow && {
                 borderBottomWidth: StyleSheet.hairlineWidth,
                 borderBottomColor: theme.colors.border,
@@ -3644,57 +3740,63 @@ export default function AgendaEditor() {
             ]}
           >
             <View style={styles.cardHeader}>
-              {drag ? (
-                <Pressable
-                  onPressIn={drag}
-                  disabled={isActive}
-                  style={[styles.sectionDragHandle, isActive && styles.sectionDragHandleActive]}
-                  hitSlop={12}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Drag to reorder ${item.section_name}`}
-                >
-                  <GripVertical size={22} color={theme.colors.textSecondary} />
-                </Pressable>
-              ) : null}
-              <View style={styles.cardTitleRow}>
-                {item.section_name.toLowerCase().includes('tag team') ? (
-                  <View style={[styles.tagTeamIconWrap, { backgroundColor: '#f59e0b18' }]}>
-                    <Users2 size={22} color="#f59e0b" />
-                  </View>
-                ) : item.section_icon ? (
-                  <Text style={styles.sectionIcon} maxFontSizeMultiplier={1.3}>{item.section_icon}</Text>
-                ) : null}
-                <View style={styles.titleContainer}>
-                  <View style={styles.titleWithTags}>
-                    <Text style={[styles.sectionTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3}>
-                      {item.section_name}
-                    </Text>
-                    {getSectionTypeTag(item) && (
-                      <View style={[styles.sectionTypeTag, {
-                        backgroundColor: getSectionTypeTag(item)!.bgColor,
-                        borderColor: getSectionTypeTag(item)!.color
-                      }]}>
-                        <Text style={[styles.sectionTypeTagText, {
-                          color: getSectionTypeTag(item)!.color
-                        }]} maxFontSizeMultiplier={1.3}>
-                          {getSectionTypeTag(item)!.label}
+              <View style={styles.cardHeaderMain}>
+                {dragHandle ? (
+                  <Pressable
+                    onPressIn={(e) => dragHandle.onDragPressIn(e.nativeEvent.pageY)}
+                    onPressOut={dragHandle.onDragPressOut}
+                    onLongPress={dragHandle.onDragLongPress ?? dragHandle.drag}
+                    delayLongPress={AGENDA_SECTION_LONG_PRESS_MS}
+                    style={[
+                      styles.sectionDragZone,
+                      isPressing && { backgroundColor: theme.colors.primary + '14' },
+                      isReady && {
+                        backgroundColor: theme.colors.primary + '32',
+                        borderColor: theme.colors.primary,
+                      },
+                      isDragging && {
+                        backgroundColor: theme.colors.primary + '22',
+                        borderColor: theme.colors.primary,
+                      },
+                      Platform.OS === 'web' &&
+                        (isReady || isDragging) && ({
+                          cursor: isDragging ? 'grabbing' : 'grab',
+                          userSelect: 'none',
+                        } as const),
+                    ]}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Press and hold to reorder ${item.section_name}`}
+                  >
+                    <GripVertical
+                      size={26}
+                      color={isReady || isDragging ? theme.colors.primary : theme.colors.textSecondary}
+                    />
+                    <View style={styles.sectionDragZoneContent}>
+                      {sectionTitleBlock}
+                      {isReady && !isDragging ? (
+                        <Text
+                          style={[styles.sectionDragReadyLabel, { color: theme.colors.primary }]}
+                          maxFontSizeMultiplier={1.2}
+                        >
+                          Ready — drag up or down
                         </Text>
-                      </View>
-                    )}
-                    {!item.is_visible && (
-                      <View style={styles.hiddenBadge}>
-                        <Text style={styles.hiddenBadgeText} maxFontSizeMultiplier={1.3}>HIDDEN</Text>
-                      </View>
-                    )}
-                  </View>
-                  <Text style={[styles.sectionOrder, { color: theme.colors.textSecondary }]} maxFontSizeMultiplier={1.3}>
-                    Section {item.section_order}
-                  </Text>
-                </View>
+                      ) : isPressing && !isReady ? (
+                        <Text
+                          style={[styles.sectionDragReadyLabel, { color: theme.colors.textSecondary }]}
+                          maxFontSizeMultiplier={1.2}
+                        >
+                          Keep holding…
+                        </Text>
+                      ) : null}
+                    </View>
+                  </Pressable>
+                ) : (
+                  sectionTitleBlock
+                )}
               </View>
 
               <View style={styles.headerActions}>
-                {!drag ? (
+                {!dragHandle ? (
                   <View style={styles.reorderButtons}>
                     <TouchableOpacity
                       onPress={() => moveItemUp(index)}
@@ -6000,7 +6102,7 @@ export default function AgendaEditor() {
           >
             <GripVertical size={16} color={theme.colors.textSecondary} />
             <Text style={[styles.sectionDragHintText, { color: theme.colors.textSecondary }]} maxFontSizeMultiplier={1.3}>
-              Press and hold the grip on a section, then drag up or down to reorder.
+              Press and hold a section title until it highlights, then drag up or down to reorder.
             </Text>
           </View>
         )}
@@ -6035,10 +6137,24 @@ export default function AgendaEditor() {
           <NestableDraggableFlatList
             data={agendaItems}
             keyExtractor={(item) => item.id}
-            onDragEnd={({ data }) => reorderAgendaItems(data)}
-            renderItem={({ item, drag, isActive, getIndex }) => (
+            activationDistance={12}
+            autoscrollThreshold={72}
+            autoscrollSpeed={220}
+            onDragEnd={({ data }) => {
+              void reorderAgendaItems(data);
+              clearSectionDragArmState();
+            }}
+            onRelease={() => clearSectionDragArmState()}
+            renderItem={({ item, drag, isActive, getIndex, ...dragUi }) => (
               <ScaleDecorator>
-                {renderAgendaSectionRow(item, getIndex() ?? 0, agendaItems.length, { drag, isActive })}
+                {renderAgendaSectionRow(
+                  item,
+                  getIndex() ?? 0,
+                  agendaItems.length,
+                  Platform.OS === 'web'
+                    ? { drag, isActive, ...dragUi }
+                    : buildNativeSectionDragHandle(item, drag, isActive),
+                )}
               </ScaleDecorator>
             )}
           />
@@ -6276,36 +6392,54 @@ export default function AgendaEditor() {
               </TouchableOpacity>
             </View>
             <Text style={[styles.manageSequenceSubtitle, { color: theme.colors.textSecondary }]} maxFontSizeMultiplier={1.3}>
-              Drag sections by the grip to reorder all {agendaItems.length} sections. Changes save automatically.
+              Press and hold a section until it highlights, then drag to reorder. Changes save automatically.
             </Text>
             <DraggableFlatList
               data={agendaItems}
               keyExtractor={(item) => item.id}
-              onDragEnd={({ data }) => reorderAgendaItems(data)}
+              activationDistance={12}
+              onDragEnd={({ data }) => {
+                void reorderAgendaItems(data);
+                clearSectionDragArmState();
+              }}
+              onRelease={() => clearSectionDragArmState()}
               style={styles.manageSequenceList}
               contentContainerStyle={{ paddingBottom: 24 }}
               showsVerticalScrollIndicator={true}
               keyboardShouldPersistTaps="handled"
-              renderItem={({ item, drag, isActive, getIndex }) => {
+              renderItem={({ item, drag, isActive, getIndex, ...dragUi }) => {
                 const index = getIndex() ?? 0;
+                const handle =
+                  Platform.OS === 'web'
+                    ? { drag, isActive, ...dragUi }
+                    : buildNativeSectionDragHandle(item, drag, isActive);
+                const isDraggingRow = handle.isActive;
+                const isPressing = handle.isPressing && !isDraggingRow;
+                const isReady = handle.isReady && !isDraggingRow;
                 return (
                   <ScaleDecorator>
-                    <View
+                    <Pressable
+                      onPressIn={(e) => handle.onDragPressIn(e.nativeEvent.pageY)}
+                      onPressOut={handle.onDragPressOut}
+                      onLongPress={handle.onDragLongPress ?? handle.drag}
+                      delayLongPress={AGENDA_SECTION_LONG_PRESS_MS}
                       style={[
                         styles.manageSequenceRow,
-                        isActive && styles.agendaCardDragging,
+                        isDraggingRow && styles.agendaCardDragging,
+                        isPressing && { backgroundColor: theme.colors.primary + '14' },
+                        isReady && {
+                          backgroundColor: theme.colors.primary + '32',
+                          borderColor: theme.colors.primary,
+                          borderLeftWidth: 4,
+                        },
                         { borderBottomColor: theme.colors.border },
                       ]}
+                      accessibilityLabel={`Press and hold to reorder ${item.section_name}`}
                     >
-                      <Pressable
-                        onPressIn={drag}
-                        disabled={isActive}
-                        style={styles.sectionDragHandle}
-                        hitSlop={10}
-                        accessibilityLabel={`Drag to reorder ${item.section_name}`}
-                      >
-                        <GripVertical size={20} color={theme.colors.textSecondary} />
-                      </Pressable>
+                      <GripVertical
+                        size={22}
+                        color={isReady || isDraggingRow ? theme.colors.primary : theme.colors.textSecondary}
+                      />
                       <Text style={[styles.manageSequenceOrder, { color: theme.colors.textSecondary }]} maxFontSizeMultiplier={1.3}>
                         {index + 1}
                       </Text>
@@ -6322,6 +6456,11 @@ export default function AgendaEditor() {
                       >
                         {item.section_name}
                       </Text>
+                      {isReady && !isDraggingRow ? (
+                        <Text style={[styles.manageSequenceReadyHint, { color: theme.colors.primary }]} maxFontSizeMultiplier={1.2}>
+                          Drag ↑↓
+                        </Text>
+                      ) : null}
                       <View style={styles.manageSequenceActions}>
                         <TouchableOpacity
                           onPress={() => toggleVisibility(item.id)}
@@ -6334,7 +6473,7 @@ export default function AgendaEditor() {
                           )}
                         </TouchableOpacity>
                       </View>
-                    </View>
+                    </Pressable>
                   </ScaleDecorator>
                 );
               }}
@@ -6999,13 +7138,31 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 4,
   },
-  sectionDragHandle: {
-    paddingRight: 10,
-    paddingTop: 2,
-    alignSelf: 'flex-start',
+  cardHeaderMain: {
+    flex: 1,
+    minWidth: 0,
   },
-  sectionDragHandleActive: {
-    opacity: 0.85,
+  sectionDragZone: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    marginHorizontal: -10,
+    marginTop: -6,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  sectionDragZoneContent: {
+    flex: 1,
+    minWidth: 0,
+    gap: 4,
+  },
+  sectionDragReadyLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.2,
   },
   sectionDragHintRow: {
     flexDirection: 'row',
@@ -7656,6 +7813,11 @@ const styles = StyleSheet.create({
     width: 28,
     fontSize: 14,
     fontWeight: '700',
+  },
+  manageSequenceReadyHint: {
+    fontSize: 11,
+    fontWeight: '700',
+    marginRight: 4,
   },
   manageSequenceName: {
     flex: 1,
