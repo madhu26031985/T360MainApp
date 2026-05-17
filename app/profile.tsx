@@ -13,6 +13,8 @@ import { useShouldLoadNetworkAvatars } from '@/lib/networkAvatarPolicy';
 
 const FOOTER_NAV_ICON_SIZE = 15;
 
+const MY_PROFILE_KB_URL = 'https://app.t360.in/weblogin/t360-training-my-profile';
+
 interface ProfileData {
   full_name: string;
   email: string;
@@ -61,7 +63,6 @@ export default function Profile() {
   const [showSocialModal, setShowSocialModal] = useState(false);
   const [selectedSocialPlatform, setSelectedSocialPlatform] = useState<string | null>(null);
   const [tempSocialUrl, setTempSocialUrl] = useState('');
-  const [showInfoModal, setShowInfoModal] = useState(false);
   const [showSaveConfirmModal, setShowSaveConfirmModal] = useState(false);
   const infoIconBlinkOpacity = useRef(new Animated.Value(1)).current;
   const infoIconPulseScale = useRef(new Animated.Value(1)).current;
@@ -521,6 +522,16 @@ export default function Profile() {
     return `${current}/300`;
   };
 
+  const openMyProfileKb = () => {
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined') {
+        window.location.assign(MY_PROFILE_KB_URL);
+      }
+      return;
+    }
+    router.push('/t360-training-my-profile');
+  };
+
   if (isLoading) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -555,8 +566,10 @@ export default function Profile() {
           <Animated.View style={[styles.infoButtonPulseWrap, { opacity: infoIconBlinkOpacity, transform: [{ scale: infoIconPulseScale }] }]}>
             <TouchableOpacity
               style={[styles.infoButton, { backgroundColor: '#E8EEF5', borderColor: '#D4DEE9' }]}
-              onPress={() => setShowInfoModal(true)}
+              onPress={openMyProfileKb}
               activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel="My Profile knowledge base"
             >
               <Info size={18} color="#6E839F" />
             </TouchableOpacity>
@@ -1069,60 +1082,6 @@ export default function Profile() {
         </TouchableOpacity>
       </Modal>
 
-      {/* Info Modal */}
-      <Modal
-        visible={showInfoModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowInfoModal(false)}
-      >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setShowInfoModal(false)}
-        >
-          <TouchableOpacity
-            style={[styles.modal, styles.infoModal]}
-            activeOpacity={1}
-            onPress={(e) => e.stopPropagation()}
-          >
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle} maxFontSizeMultiplier={1.3}>Your Profile</Text>
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={() => setShowInfoModal(false)}
-              >
-                <X size={24} color="#6B7280" />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.infoHeaderDivider} />
-
-            <ScrollView style={styles.infoContent} showsVerticalScrollIndicator={false}>
-              <Text style={styles.infoTitle} maxFontSizeMultiplier={1.3}>Your story, your identity ✨</Text>
-
-              <Text style={styles.infoText} maxFontSizeMultiplier={1.3}>
-                Let people know who you are beyond meetings.
-              </Text>
-
-              <Text style={styles.infoBullet} maxFontSizeMultiplier={1.3}>📸  Add your photo</Text>
-              <Text style={styles.infoBullet} maxFontSizeMultiplier={1.3}>📍  Update contact & location</Text>
-              <Text style={styles.infoBullet} maxFontSizeMultiplier={1.3}>✍️  Write about yourself</Text>
-              <Text style={styles.infoBullet} maxFontSizeMultiplier={1.3}>🔗  Add social links</Text>
-
-              <Text style={styles.infoText} maxFontSizeMultiplier={1.3}>
-                Your About section is your quick intro.
-              </Text>
-            </ScrollView>
-
-            <TouchableOpacity
-              style={[styles.modalButton, { backgroundColor: '#3B82F6', borderColor: '#3B82F6', marginTop: 16 }]}
-              onPress={() => setShowInfoModal(false)}
-            >
-              <Text style={[styles.modalButtonText, { color: '#FFFFFF' }]} maxFontSizeMultiplier={1.3}>Got it</Text>
-            </TouchableOpacity>
-          </TouchableOpacity>
-        </TouchableOpacity>
-      </Modal>
     </SafeAreaView>
   );
 }
@@ -1429,53 +1388,6 @@ const styles = StyleSheet.create({
   modalButtonText: {
     fontSize: 16,
     fontWeight: '600',
-  },
-  infoModal: {
-    maxHeight: '80%',
-  },
-  infoContent: {
-    maxHeight: 400,
-  },
-  infoHeaderDivider: {
-    height: 1,
-    backgroundColor: '#E5E7EB',
-    marginBottom: 12,
-  },
-  infoTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 12,
-  },
-  infoSubtitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#111827',
-    marginTop: 12,
-    marginBottom: 8,
-  },
-  infoText: {
-    fontSize: 14,
-    fontWeight: '400',
-    color: '#4B5563',
-    lineHeight: 20,
-    marginBottom: 12,
-  },
-  infoBullet: {
-    fontSize: 14,
-    fontWeight: '400',
-    color: '#4B5563',
-    lineHeight: 20,
-    marginBottom: 6,
-    paddingLeft: 8,
-  },
-  infoFooter: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#111827',
-    lineHeight: 20,
-    marginTop: 8,
-    marginBottom: 4,
   },
   geBottomDock: {
     borderTopWidth: StyleSheet.hairlineWidth,

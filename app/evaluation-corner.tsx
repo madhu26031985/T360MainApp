@@ -20,6 +20,8 @@ const footerIconTileStyle = {
   backgroundColor: 'transparent',
 } as const;
 
+const PREPARED_SPEAKER_KB_URL = 'https://app.t360.in/weblogin/t360-training-prepared-speaker-role';
+
 interface Meeting {
   id: string;
   meeting_title: string;
@@ -116,7 +118,6 @@ export default function EvaluationCorner() {
     comments_for_evaluator: ''
   });
   const [isSaving, setIsSaving] = useState(false);
-  const [showInfoModal, setShowInfoModal] = useState(false);
   const [bookingRoleId, setBookingRoleId] = useState<string | null>(null);
   const [assignModalOpen, setAssignModalOpen] = useState(false);
   const [assignTargetBooking, setAssignTargetBooking] = useState<RoleBooking | null>(null);
@@ -151,8 +152,14 @@ export default function EvaluationCorner() {
     }, [meetingId, user?.currentClubId])
   );
 
-  const showPreparedSpeakerInfo = () => {
-    setShowInfoModal(true);
+  const openPreparedSpeakerKb = () => {
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined') {
+        window.location.assign(PREPARED_SPEAKER_KB_URL);
+      }
+      return;
+    }
+    router.push('/t360-training-prepared-speaker-role');
   };
 
   const upsertAssignedEvaluator = async (booking: RoleBooking, evaluatorId: string | null) => {
@@ -1637,7 +1644,12 @@ export default function EvaluationCorner() {
         <Text style={[styles.headerTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3}>
           Prepared Speeches
         </Text>
-        <TouchableOpacity style={styles.infoButton} onPress={showPreparedSpeakerInfo}>
+        <TouchableOpacity
+          style={styles.infoButton}
+          onPress={openPreparedSpeakerKb}
+          accessibilityRole="button"
+          accessibilityLabel="Prepared Speaker knowledge base"
+        >
           <Info size={24} color={theme.colors.primary} />
         </TouchableOpacity>
       </View>
@@ -1894,48 +1906,6 @@ export default function EvaluationCorner() {
         </View>
       </Modal>
 
-      <Modal
-        visible={showInfoModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowInfoModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.infoModalContainer, { backgroundColor: theme.colors.surface }]}>
-            <View style={styles.infoModalHeader}>
-              <Text style={[styles.infoModalTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3}>
-                Prepared Speaker 🎤
-              </Text>
-              <TouchableOpacity
-                style={styles.infoModalCloseButton}
-                onPress={() => setShowInfoModal(false)}
-              >
-                <X size={24} color={theme.colors.textSecondary} />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView
-              style={styles.infoModalContent}
-              showsVerticalScrollIndicator={false}
-            >
-              <Text style={[styles.infoModalText, { color: theme.colors.text, fontWeight: '600' }]} maxFontSizeMultiplier={1.3}>
-                All the best for your speech!
-              </Text>
-
-              <Text style={[styles.infoModalText, { color: theme.colors.text, marginBottom: 0 }]} maxFontSizeMultiplier={1.3}>
-                Kindly add your speech details (title, pathway, level, and project) and upload your evaluation form. Your VPE will assign an evaluator, and you may connect with your mentor for guidance and rehearsal.
-              </Text>
-            </ScrollView>
-
-            <TouchableOpacity
-              style={[styles.infoModalButton, { backgroundColor: theme.colors.primary }]}
-              onPress={() => setShowInfoModal(false)}
-            >
-              <Text style={styles.infoModalButtonText} maxFontSizeMultiplier={1.3}>Got it</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -2828,58 +2798,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     color: '#111827',
-  },
-  infoModalContainer: {
-    borderRadius: 20,
-    width: '100%',
-    maxWidth: 500,
-    maxHeight: '80%',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  infoModalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 20,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0, 0, 0, 0.1)',
-  },
-  infoModalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    flex: 1,
-  },
-  infoModalCloseButton: {
-    padding: 4,
-  },
-  infoModalContent: {
-    padding: 20,
-    maxHeight: 500,
-  },
-  infoModalText: {
-    fontSize: 15,
-    lineHeight: 24,
-    marginBottom: 16,
-  },
-  infoModalButton: {
-    margin: 20,
-    marginTop: 0,
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  infoModalButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#ffffff',
   },
   saveConfirmModalCard: {
     width: '92%',

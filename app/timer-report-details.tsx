@@ -170,6 +170,8 @@ function isTimerReportRoleSlotAvailable(role: { role_status?: string | null }): 
   return (role.role_status ?? 'Available') !== 'Deleted';
 }
 
+const TIMER_ROLE_KB_URL = 'https://app.t360.in/weblogin/t360-training-timer-role';
+
 interface CategoryRole {
   id: string;
   role_name: string;
@@ -2123,6 +2125,27 @@ export default function TimerReportDetails() {
     </TouchableOpacity>
   );
 
+  const openTimerRoleKb = () => {
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined') {
+        window.location.assign(TIMER_ROLE_KB_URL);
+      }
+      return;
+    }
+    router.push('/t360-training-timer-role');
+  };
+
+  const renderTimerHeaderRight = () => (
+    <TouchableOpacity
+      style={styles.headerHelpButton}
+      onPress={openTimerRoleKb}
+      accessibilityRole="button"
+      accessibilityLabel="Timer role knowledge base"
+    >
+      <Info size={20} color={theme.colors.primary} />
+    </TouchableOpacity>
+  );
+
   if (isLoading) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -2160,7 +2183,7 @@ export default function TimerReportDetails() {
                 <ArrowLeft size={24} color={theme.colors.text} />
               </TouchableOpacity>
               <Text style={[styles.headerTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3}>Timer Report</Text>
-              <View style={styles.headerSpacer} />
+              {renderTimerHeaderRight()}
             </View>
 
             <View style={styles.mainBody}>
@@ -2616,7 +2639,7 @@ export default function TimerReportDetails() {
           <ArrowLeft size={24} color={theme.colors.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3}>Timer Report</Text>
-        <View style={styles.headerSpacer} />
+        {renderTimerHeaderRight()}
       </View>
 
       <View style={styles.mainBody}>
@@ -4563,8 +4586,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
   },
-  headerSpacer: {
+  headerHelpButton: {
     width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   mainBody: {
     flex: 1,

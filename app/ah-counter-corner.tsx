@@ -24,8 +24,10 @@ import {
   reassignBookedMeetingRole,
   type BookMeetingRoleResult,
 } from '@/lib/bookMeetingRoleInline';
-import { ArrowLeft, Calendar, Clock, MapPin, Building2, User, FileText, ChartBar, Play, ClipboardList, Users, BookOpen, Star, Mic, CheckSquare, FileBarChart, MessageSquare, Crown, Settings, UserCog, LayoutDashboard, Vote, X, UserCheck, NotebookPen, ClipboardCheck, Trash2, Plus, Search, RotateCcw, UserPlus, Eye, EyeOff, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react-native';
+import { ArrowLeft, Calendar, Clock, MapPin, Building2, User, FileText, ChartBar, Play, ClipboardList, Users, BookOpen, Star, Mic, CheckSquare, FileBarChart, MessageSquare, Crown, Settings, UserCog, LayoutDashboard, Vote, X, UserCheck, NotebookPen, ClipboardCheck, Trash2, Plus, Search, RotateCcw, UserPlus, Eye, EyeOff, ChevronRight, ChevronDown, ChevronUp, Info } from 'lucide-react-native';
 import { Image } from 'react-native';
+
+const AH_COUNTER_KB_URL = 'https://app.t360.in/weblogin/t360-training-ah-counter-role';
 
 interface Meeting {
   id: string;
@@ -1587,6 +1589,27 @@ export default function AhCounterCorner() {
   // Note: we intentionally do not return a full-screen loading state.
   // The screen should open instantly; sections show their own spinners/placeholders.
 
+  const openAhCounterKb = () => {
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined') {
+        window.location.assign(AH_COUNTER_KB_URL);
+      }
+      return;
+    }
+    router.push('/t360-training-ah-counter-role');
+  };
+
+  const renderAhCounterHeaderRight = () => (
+    <TouchableOpacity
+      style={styles.headerHelpButton}
+      onPress={openAhCounterKb}
+      accessibilityRole="button"
+      accessibilityLabel="Ah Counter knowledge base"
+    >
+      <Info size={20} color={theme.colors.primary} />
+    </TouchableOpacity>
+  );
+
   if (isLoading && !meeting) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -1595,7 +1618,7 @@ export default function AhCounterCorner() {
             <ArrowLeft size={24} color={theme.colors.text} />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3}>Ah Counter</Text>
-          <View style={styles.headerSpacer} />
+          {renderAhCounterHeaderRight()}
         </View>
         <View style={styles.centerContainer}>
           <ActivityIndicator color={theme.colors.primary} />
@@ -1612,7 +1635,7 @@ export default function AhCounterCorner() {
             <ArrowLeft size={24} color={theme.colors.text} />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3}>Ah Counter</Text>
-          <View style={styles.headerSpacer} />
+          {renderAhCounterHeaderRight()}
         </View>
         <View style={styles.centerContainer}>
           <Text style={[styles.errorText, { color: theme.colors.textSecondary }]} maxFontSizeMultiplier={1.3}>Meeting not found</Text>
@@ -1632,7 +1655,7 @@ export default function AhCounterCorner() {
             <ArrowLeft size={24} color={theme.colors.text} />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3}>Ah Counter Report</Text>
-          <View style={styles.headerSpacer} />
+          {renderAhCounterHeaderRight()}
         </View>
 
         <View style={styles.mainBody}>
@@ -1843,7 +1866,7 @@ export default function AhCounterCorner() {
           <ArrowLeft size={24} color={theme.colors.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3}>Ah Counter Report</Text>
-        <View style={styles.headerSpacer} />
+        {renderAhCounterHeaderRight()}
       </View>
 
       <View style={styles.mainBody}>
@@ -2912,8 +2935,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginHorizontal: 16,
   },
-  headerSpacer: {
+  headerHelpButton: {
     width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   content: {
     flex: 1,

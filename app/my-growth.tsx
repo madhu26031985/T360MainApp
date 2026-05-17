@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, useWindowDimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ArrowLeft, Users, Sparkles, Home, Calendar, Settings, Shield, UserCheck, Award } from 'lucide-react-native';
+import { ArrowLeft, Users, Sparkles, Home, Calendar, Settings, Shield, UserCheck, Award, Info } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import MyRoleInsightsPanel from '@/components/MyRoleInsightsPanel';
@@ -11,6 +11,7 @@ import MyAwardsPanel from '@/components/MyAwardsPanel';
 
 type GrowthTab = 'awards' | 'attendance' | 'role_insights';
 const FOOTER_NAV_ICON_SIZE = 15;
+const MY_GROWTH_KB_URL = 'https://app.t360.in/weblogin/t360-training-my-growth';
 
 export default function MyGrowthScreen() {
   const { theme } = useTheme();
@@ -22,6 +23,16 @@ export default function MyGrowthScreen() {
     user?.clubs?.find((c) => c.id === user?.currentClubId)?.role?.toLowerCase() === 'excomm';
   const footerIconTileStyle = { borderWidth: 0, backgroundColor: 'transparent' } as const;
   const [tab, setTab] = useState<GrowthTab>('attendance');
+
+  const openMyGrowthKb = () => {
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined') {
+        window.location.assign(MY_GROWTH_KB_URL);
+      }
+      return;
+    }
+    router.push('/t360-training-my-growth');
+  };
 
   const tabButton = (
     key: GrowthTab,
@@ -63,7 +74,14 @@ export default function MyGrowthScreen() {
         <Text style={[styles.headerTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3}>
           My Growth
         </Text>
-        <View style={styles.headerRightSpacer} />
+        <TouchableOpacity
+          style={styles.headerHelpButton}
+          onPress={openMyGrowthKb}
+          accessibilityRole="button"
+          accessibilityLabel="My Growth knowledge base"
+        >
+          <Info size={20} color={theme.colors.primary} />
+        </TouchableOpacity>
       </View>
 
       <View style={[styles.segmentOuter, { borderColor: '#BFDBFE', backgroundColor: '#F8FAFC' }]}>
@@ -178,8 +196,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'center',
   },
-  headerRightSpacer: {
+  headerHelpButton: {
     width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   segmentOuter: {
     marginHorizontal: 16,

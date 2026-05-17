@@ -30,6 +30,8 @@ const FOOTER_NAV_ICON_SIZE = 15;
 import { Image } from 'react-native';
 import { initialsFromName, useShouldLoadNetworkAvatars } from '@/lib/networkAvatarPolicy';
 
+const GRAMMARIAN_KB_URL = 'https://app.t360.in/weblogin/t360-training-grammarian-role';
+
 interface Meeting {
   id: string;
   meeting_title: string;
@@ -222,7 +224,6 @@ export default function GrammarianReport() {
   const [cornerPhaseTab, setCornerPhaseTab] = useState<'pre-meeting' | 'live-meeting'>('pre-meeting');
   const [grammarianSummaryVisibleToMembers, setGrammarianSummaryVisibleToMembers] = useState(true);
   const [grammarianSummaryVisibilityFetched, setGrammarianSummaryVisibilityFetched] = useState(false);
-  const [showGrammarianInfoModal, setShowGrammarianInfoModal] = useState(false);
   const loadInFlightRef = useRef<Promise<void> | null>(null);
   const lastLoadAtRef = useRef<number>(0);
   const liveDataLoadedRef = useRef(false);
@@ -251,8 +252,6 @@ export default function GrammarianReport() {
     inputRange: [1, 1.08],
     outputRange: [0.7, 1],
   });
-  const grammarianFirstName = (user?.fullName || '').trim().split(/\s+/).filter(Boolean)[0] || 'there';
-
   // Wait for auth (same idea as toastmaster-corner useFocusEffect deps) so we never "finish" loading
   // before user/club exist — avoids a dead early return that skipped loadData forever.
   useEffect(() => {
@@ -1639,6 +1638,28 @@ export default function GrammarianReport() {
     </View>
   );
 
+  const openGrammarianKb = () => {
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined') {
+        window.location.assign(GRAMMARIAN_KB_URL);
+      }
+      return;
+    }
+    router.push('/t360-training-grammarian-role');
+  };
+
+  const renderGrammarianHeaderRight = () => (
+    <TouchableOpacity
+      style={styles.headerInfoButton}
+      onPress={openGrammarianKb}
+      activeOpacity={0.8}
+      accessibilityRole="button"
+      accessibilityLabel="Grammarian knowledge base"
+    >
+      <Info size={20} color={theme.colors.primary} />
+    </TouchableOpacity>
+  );
+
   if (isLoading) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -1676,7 +1697,7 @@ export default function GrammarianReport() {
             <ArrowLeft size={24} color={theme.colors.text} />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3}>Grammarian Report</Text>
-          <View style={styles.headerSpacer} />
+          {renderGrammarianHeaderRight()}
         </View>
 
         <View style={styles.mainBody}>
@@ -1886,17 +1907,7 @@ export default function GrammarianReport() {
           <ArrowLeft size={24} color={theme.colors.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3}>Grammarian Report</Text>
-        {canEditGrammarianCorner() ? (
-          <TouchableOpacity
-            style={styles.headerInfoButton}
-            onPress={() => setShowGrammarianInfoModal(true)}
-            activeOpacity={0.8}
-          >
-            <Info size={20} color={theme.colors.primary} />
-          </TouchableOpacity>
-        ) : (
-          <View style={styles.headerSpacer} />
-        )}
+        {renderGrammarianHeaderRight()}
       </View>
 
       <View style={styles.mainBody}>
@@ -2833,68 +2844,6 @@ export default function GrammarianReport() {
         </TouchableOpacity>
       </Modal>
 
-      <Modal
-        visible={showGrammarianInfoModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowGrammarianInfoModal(false)}
-      >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setShowGrammarianInfoModal(false)}
-        >
-          <TouchableOpacity
-            activeOpacity={1}
-            onPress={(e) => e.stopPropagation()}
-            style={[styles.grammarianInfoModalCard, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
-          >
-            <Text style={[styles.grammarianInfoTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3}>
-              Grammarian Guide
-            </Text>
-            <ScrollView style={styles.grammarianInfoScroll} showsVerticalScrollIndicator={false}>
-              <Text style={[styles.grammarianInfoText, { color: theme.colors.textSecondary }]} maxFontSizeMultiplier={1.25}>
-                {`Hello ${grammarianFirstName}, you are the Grammarian of the Day! 🌟
-
-You will see two tabs: Grammarian Corner and Grammarian Summary.
-All other members will be able to view only the Grammarian Summary.
-
-In Grammarian Summary, Lexicon shows Word, Idiom, and Quote of the Day; Reports opens the full meeting report when available.
-
-Under Grammarian Corner, use Pre meeting for prep shortcuts and Live meeting for Good usage, Opportunity, and Stats.
-
-📝 Pre meeting
-Add the Word of the Day, Quote, and Idiom
-Once added, they are saved automatically
-All members can view them in the Grammarian Summary
-
-🎤 Live meeting
-Capture key observations:
-Good usage of language
-Opportunities for improvement
-Stats – track Word of the Day usage
-
-📊 After the Meeting
-Use the Publish button under Stats to share your report
-Once published, all members can view it in the Grammarian Summary
-You can unpublish anytime to make edits
-
-Finally, don’t forget to share the Grammarian Report with all club members.
-
-💬 You’re making a meaningful effort to help everyone improve their language and communication. Your role truly elevates the quality of the meeting—thank you for your contribution!`}
-              </Text>
-            </ScrollView>
-            <TouchableOpacity
-              style={[styles.grammarianInfoCloseBtn, { backgroundColor: theme.colors.primary }]}
-              onPress={() => setShowGrammarianInfoModal(false)}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.grammarianInfoCloseBtnText} maxFontSizeMultiplier={1.2}>Got it</Text>
-            </TouchableOpacity>
-          </TouchableOpacity>
-        </TouchableOpacity>
-      </Modal>
-
       {/* Member Feedback Modal */}
       <Modal
         visible={showFeedbackModal}
@@ -3089,9 +3038,6 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'center',
     marginHorizontal: 16,
-  },
-  headerSpacer: {
-    width: 40,
   },
   headerInfoButton: {
     width: 40,
@@ -4074,40 +4020,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  grammarianInfoModalCard: {
-    width: '90%',
-    maxWidth: 520,
-    borderRadius: 16,
-    borderWidth: 1,
-    padding: 16,
-    maxHeight: '78%',
-  },
-  grammarianInfoTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  grammarianInfoScroll: {
-    maxHeight: 420,
-  },
-  grammarianInfoText: {
-    fontSize: 14,
-    lineHeight: 21,
-    fontWeight: '500',
-  },
-  grammarianInfoCloseBtn: {
-    marginTop: 14,
-    alignSelf: 'center',
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 10,
-  },
-  grammarianInfoCloseBtnText: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '700',
   },
   fullScreenModal: {
     flex: 1,

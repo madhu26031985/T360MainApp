@@ -10,7 +10,7 @@ import { MeetingRolesTabPanel } from '@/components/MeetingRolesTabPanel';
 import { MeetingActionsTabPanel } from '@/components/MeetingActionsTabPanel';
 import { MeetingEvaluationTabPanel } from '@/components/MeetingEvaluationTabPanel';
 import type { MeetingFlowTab } from '@/lib/meetingTabsCatalog';
-import { ArrowLeft, Calendar, Clock, MapPin, ChevronRight, ChevronDown, ChevronUp, Building2, Crown, User, Shield, Eye, UserCheck, Lock, Home, Users, Settings } from 'lucide-react-native';
+import { ArrowLeft, Calendar, Clock, MapPin, ChevronRight, ChevronDown, ChevronUp, Building2, Crown, User, Shield, Eye, UserCheck, Lock, Home, Users, Settings, Info } from 'lucide-react-native';
 import { Search, Filter } from 'lucide-react-native';
 import { TextInput, Modal } from 'react-native';
 
@@ -24,6 +24,8 @@ const N = {
   iconMuted: 'rgba(55, 53, 47, 0.45)',
 };
 const BOOK_ROLE_DOCK_ICON_SIZE = 15;
+
+const MEETING_HISTORY_KB_URL = 'https://app.t360.in/weblogin/t360-training-meeting-history';
 
 interface Meeting {
   id: string;
@@ -376,6 +378,16 @@ export default function MeetingRecords() {
     </View>
   );
 
+  const openMeetingHistoryKb = () => {
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined') {
+        window.location.assign(MEETING_HISTORY_KB_URL);
+      }
+      return;
+    }
+    router.push('/t360-training-meeting-history');
+  };
+
   if (isLoading) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: N.page }]}>
@@ -415,7 +427,14 @@ export default function MeetingRecords() {
           <ArrowLeft size={22} color={N.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: N.text }]} maxFontSizeMultiplier={1.3}>Completed Meetings</Text>
-        <View style={styles.headerSpacer} />
+        <TouchableOpacity
+          style={styles.headerHelpButton}
+          onPress={openMeetingHistoryKb}
+          accessibilityRole="button"
+          accessibilityLabel="Meeting History knowledge base"
+        >
+          <Info size={20} color={theme.colors.primary} />
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -753,8 +772,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginHorizontal: 16,
   },
-  headerSpacer: {
+  headerHelpButton: {
     width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   content: {
     flex: 1,
