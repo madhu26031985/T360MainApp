@@ -6,7 +6,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { EXCOMM_UI } from '@/lib/excommUiTokens';
-import { ArrowLeft, Facebook, Twitter, Linkedin, Instagram, MessageCircle, Youtube, ExternalLink } from 'lucide-react-native';
+import { ArrowLeft, Facebook, Twitter, Linkedin, Instagram, MessageCircle, Youtube, ExternalLink, Info } from 'lucide-react-native';
 import { Crown, User, Shield, Eye, UserCheck } from 'lucide-react-native';
 
 interface ClubSocialMedia {
@@ -40,6 +40,8 @@ const SOCIAL_ICON_COLORS: Record<string, string> = {
   YouTube: '#FF0000',
   Website: '#2383E2',
 };
+
+const CLUB_SOCIAL_MEDIA_KB_URL = 'https://app.t360.in/weblogin/t360-training-club-social-media';
 
 export default function SocialMediaManagement() {
   const { theme } = useTheme();
@@ -328,6 +330,16 @@ export default function SocialMediaManagement() {
     }
   };
 
+  const openClubSocialMediaKb = () => {
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined') {
+        window.location.assign(CLUB_SOCIAL_MEDIA_KB_URL);
+      }
+      return;
+    }
+    router.push('/t360-training-club-social-media');
+  };
+
   if (isLoading) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -346,7 +358,14 @@ export default function SocialMediaManagement() {
           <ArrowLeft size={24} color={theme.colors.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3}>Club Social Media</Text>
-        <View style={styles.headerRightSpacer} />
+        <TouchableOpacity
+          style={styles.headerHelpButton}
+          onPress={openClubSocialMediaKb}
+          accessibilityRole="button"
+          accessibilityLabel="Club Social Media knowledge base"
+        >
+          <Info size={20} color={theme.colors.primary} />
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -486,9 +505,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginHorizontal: 8,
   },
-  headerRightSpacer: {
+  headerHelpButton: {
     width: 40,
     height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   content: {
     flex: 1,

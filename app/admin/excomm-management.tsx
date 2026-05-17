@@ -167,8 +167,7 @@ function mapClubProfileToExcommRoles(clubProfile: Record<string, unknown> | null
   }));
 }
 
-const EXCOMM_MANAGEMENT_INFO_MESSAGE =
-  'Go ahead and configure your leadership team using ExCom Management.\n\nIt helps your members and guests know your ExCom and their responsibilities under Club → Leadership.';
+const CLUB_EXCOMM_KB_URL = 'https://app.t360.in/weblogin/t360-training-club-excomm';
 
 type ExCommTheme = ReturnType<typeof useTheme>['theme'];
 
@@ -326,7 +325,6 @@ export default function ExCommManagement() {
   const [filteredMembers, setFilteredMembers] = useState<ClubMember[]>([]);
   const [memberModalRoleKey, setMemberModalRoleKey] = useState<string | null>(null);
   const [excommDataReady, setExcommDataReady] = useState(false);
-  const [showInfoModal, setShowInfoModal] = useState(false);
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
   const [showTermModal, setShowTermModal] = useState(false);
   const [termType, setTermType] = useState<'start' | 'end'>('start');
@@ -579,6 +577,16 @@ export default function ExCommManagement() {
     () => (memberModalRoleKey ? displayRoles.find((r) => r.key === memberModalRoleKey) : undefined),
     [displayRoles, memberModalRoleKey]
   );
+  const openClubExcommKb = () => {
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined') {
+        window.location.assign(CLUB_EXCOMM_KB_URL);
+      }
+      return;
+    }
+    router.push('/t360-training-club-excomm');
+  };
+
   if (!user?.currentClubId) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -614,12 +622,12 @@ export default function ExCommManagement() {
           </View>
           <TouchableOpacity
             style={[styles.backButton, Platform.OS === 'web' ? ({ cursor: 'pointer' } as const) : null]}
-            onPress={() => setShowInfoModal(true)}
+            onPress={openClubExcommKb}
             hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
             accessibilityRole="button"
-            accessibilityLabel="About Club ExComm"
+            accessibilityLabel="Club ExComm knowledge base"
           >
-            <Info size={21} color={theme.colors.textSecondary} strokeWidth={2} />
+            <Info size={21} color={theme.colors.primary} strokeWidth={2} />
           </TouchableOpacity>
         </View>
 
@@ -783,51 +791,6 @@ export default function ExCommManagement() {
             </View>
           </View>
         </ScrollView>
-
-        <Modal visible={showInfoModal} transparent animationType="fade" onRequestClose={() => setShowInfoModal(false)}>
-          <TouchableOpacity
-            style={styles.centerModalOverlay}
-            activeOpacity={1}
-            onPress={() => setShowInfoModal(false)}
-          >
-            <TouchableOpacity
-              activeOpacity={1}
-              onPress={(e) => e.stopPropagation()}
-              style={[
-                styles.infoModalSheet,
-                {
-                  backgroundColor: theme.colors.surface,
-                  borderColor: theme.colors.border,
-                  borderWidth: StyleSheet.hairlineWidth,
-                },
-              ]}
-            >
-              <View style={[styles.modalHeader, { borderBottomColor: theme.colors.border }]}>
-                <Text style={[styles.modalTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3}>
-                  Club ExComm
-                </Text>
-                <TouchableOpacity
-                  style={styles.closeButton}
-                  onPress={() => setShowInfoModal(false)}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                  accessibilityRole="button"
-                  accessibilityLabel="Close"
-                >
-                  <X size={22} color={theme.colors.textSecondary} />
-                </TouchableOpacity>
-              </View>
-              <ScrollView
-                style={styles.infoModalBody}
-                showsVerticalScrollIndicator={false}
-                keyboardShouldPersistTaps="handled"
-              >
-                <Text style={[styles.infoModalText, { color: theme.colors.text }]} maxFontSizeMultiplier={1.35}>
-                  {EXCOMM_MANAGEMENT_INFO_MESSAGE}
-                </Text>
-              </ScrollView>
-            </TouchableOpacity>
-          </TouchableOpacity>
-        </Modal>
 
         <Modal
           visible={memberModalRoleKey !== null}
@@ -1015,22 +978,6 @@ const styles = StyleSheet.create({
   headerCenter: { flex: 1, alignItems: 'center' },
   headerTitle: { fontSize: 14.4, fontWeight: '700' },
   saveHint: { fontSize: 8.8, fontWeight: '500', marginTop: 2 },
-  infoModalSheet: {
-    borderRadius: 0,
-    width: '100%',
-    maxWidth: 400,
-    maxHeight: '70%',
-  },
-  infoModalBody: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 24,
-  },
-  infoModalText: {
-    fontSize: 14,
-    fontWeight: '400',
-    lineHeight: 22,
-  },
   content: { flex: 1 },
   notionClubPanel: {
     marginHorizontal: 16,

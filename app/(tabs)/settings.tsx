@@ -243,7 +243,7 @@ Welcome to a seamless digital experience! 🚀`;
 
   const handlePhoneSupport = async () => {
     try {
-      await Linking.openURL('tel:9176091419');
+      await Linking.openURL('tel:9597591113');
     } catch (error) {
       console.error('Error opening phone dialer:', error);
       showAlert('Error', 'Failed to open phone dialer');
@@ -454,7 +454,7 @@ Welcome to a seamless digital experience! 🚀`;
                 icon={themedIcon(Phone, '#2563EB')}
                 iconBackgroundColor="#EFF6FF"
                 title="Phone Support"
-                description="Dial 9176091419 for phone support"
+                description="Dial 9597591113 for phone support"
                 onPress={handlePhoneSupport}
               />
               <SettingItem

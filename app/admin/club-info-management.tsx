@@ -53,6 +53,8 @@ const CLUB_INFO_TAB_ICON_COLORS = {
   moreInfo: '#0D9488',
 } as const;
 
+const CLUB_INFO_KB_URL = 'https://app.t360.in/weblogin/t360-training-club-info-admin';
+
 function timezoneLabelFromValue(timezoneValue: string | null | undefined): string {
   if (!timezoneValue) return '';
   try {
@@ -435,6 +437,32 @@ export default function ClubInfoManagement() {
     }
   };
 
+  const openClubInfoKb = () => {
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined') {
+        window.location.assign(CLUB_INFO_KB_URL);
+      }
+      return;
+    }
+    router.push('/t360-training-club-info-admin');
+  };
+
+  const renderHeaderRight = (opts?: { showFetching?: boolean }) => (
+    <View style={styles.headerRight}>
+      {opts?.showFetching && isFetching ? (
+        <Text style={[styles.headerFetchingDot, { color: theme.colors.primary }]}>●</Text>
+      ) : null}
+      <TouchableOpacity
+        style={styles.headerHelpButton}
+        onPress={openClubInfoKb}
+        accessibilityLabel="Club Info knowledge base"
+        accessibilityRole="button"
+      >
+        <Info size={20} color={theme.colors.primary} />
+      </TouchableOpacity>
+    </View>
+  );
+
   if (!clubId) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -443,7 +471,7 @@ export default function ClubInfoManagement() {
             <ArrowLeft size={24} color={theme.colors.text} />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3}>Club Info</Text>
-          <View style={styles.headerRightSpacer} />
+          {renderHeaderRight()}
         </View>
         <View style={styles.loadingContainer}>
           <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]} maxFontSizeMultiplier={1.3}>
@@ -463,7 +491,7 @@ export default function ClubInfoManagement() {
             <ArrowLeft size={24} color={theme.colors.text} />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3}>Club Info</Text>
-          <View style={styles.headerRightSpacer} />
+          {renderHeaderRight()}
         </View>
         <View style={styles.loadingContainer}>
           <Text style={[styles.loadingText, { color: theme.colors.text, textAlign: 'center', marginBottom: 16 }]} maxFontSizeMultiplier={1.2}>
@@ -489,9 +517,7 @@ export default function ClubInfoManagement() {
             <ArrowLeft size={24} color={theme.colors.text} />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3}>Club Info</Text>
-          <View style={[styles.headerRightSpacer, isFetching && styles.headerSpinnerWrap]}>
-            {isFetching ? <Text style={[styles.headerFetchingDot, { color: theme.colors.primary }]}>●</Text> : null}
-          </View>
+          {renderHeaderRight({ showFetching: true })}
         </View>
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           <View style={[styles.notionPanel, styles.skeletonPanel, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
@@ -542,9 +568,7 @@ export default function ClubInfoManagement() {
           <ArrowLeft size={24} color={theme.colors.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3}>Club Info</Text>
-        <View style={[styles.headerRightSpacer, isFetching && styles.headerSpinnerWrap]}>
-          {isFetching ? <Text style={[styles.headerFetchingDot, { color: theme.colors.primary }]}>●</Text> : null}
-        </View>
+        {renderHeaderRight({ showFetching: true })}
       </View>
 
       <KeyboardAvoidingView
@@ -1163,13 +1187,18 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginHorizontal: 16,
   },
-  headerRightSpacer: {
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    minWidth: 40,
+    gap: 4,
+  },
+  headerHelpButton: {
     width: 40,
     height: 40,
-  },
-  headerSpinnerWrap: {
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
   },
   headerFetchingDot: {
     fontSize: 10,
