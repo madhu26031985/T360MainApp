@@ -19,8 +19,10 @@ export function ScaleDecorator({ children }: { children: ReactNode }) {
 
 const DRAG_START_DELTA_PX = 10;
 const SWAP_THROTTLE_MS = 60;
-const SCROLL_EDGE_PX = 88;
-const SCROLL_MAX_SPEED = 20;
+const SCROLL_EDGE_PX = 72;
+/** One list row per step — slow enough to follow while dragging near edges. */
+const SCROLL_STEP_INTERVAL_MS = 200;
+const SCROLL_ROW_STEP_FALLBACK_PX = 52;
 
 export type AgendaDragRenderInfo<T> = {
   item: T;
@@ -92,6 +94,8 @@ function WebPointerDragList<T>({
   const pressStartYRef = useRef(0);
   const lastPointerYRef = useRef(0);
   const lastSwapAtRef = useRef(0);
+  const lastScrollStepAtRef = useRef(0);
+  const scrollRowStepRef = useRef(SCROLL_ROW_STEP_FALLBACK_PX);
   const scrollParentRef = useRef<HTMLElement | null>(null);
   const autoScrollRafRef = useRef<number | null>(null);
   const detachWindowListeners = useRef<(() => void) | null>(null);
@@ -142,15 +146,31 @@ function WebPointerDragList<T>({
     setDraggingId(null);
   }, []);
 
+  const measureScrollRowStep = useCallback(
+    (id: string) => {
+      const rect = getDomRect(rowRefs.current.get(id));
+      scrollRowStepRef.current = rect?.height
+        ? Math.max(40, Math.round(rect.height))
+        : SCROLL_ROW_STEP_FALLBACK_PX;
+    },
+    [],
+  );
+
   const autoScrollForPointer = useCallback((clientY: number) => {
     const scroller = scrollParentRef.current;
     if (!scroller) return;
+
     const rect = scroller.getBoundingClientRect();
-    if (clientY < rect.top + SCROLL_EDGE_PX) {
-      scroller.scrollTop -= SCROLL_MAX_SPEED;
-    } else if (clientY > rect.bottom - SCROLL_EDGE_PX) {
-      scroller.scrollTop += SCROLL_MAX_SPEED;
-    }
+    let direction = 0;
+    if (clientY < rect.top + SCROLL_EDGE_PX) direction = -1;
+    else if (clientY > rect.bottom - SCROLL_EDGE_PX) direction = 1;
+    if (direction === 0) return;
+
+    const now = Date.now();
+    if (now - lastScrollStepAtRef.current < SCROLL_STEP_INTERVAL_MS) return;
+    lastScrollStepAtRef.current = now;
+
+    scroller.scrollTop += direction * scrollRowStepRef.current;
   }, []);
 
   const startAutoScrollLoop = useCallback(() => {
@@ -237,6 +257,8 @@ function WebPointerDragList<T>({
 
       const rowNode = rowRefs.current.get(id) as unknown as HTMLElement | null;
       scrollParentRef.current = resolveScrollElement(rowNode, agendaScrollRef);
+      measureScrollRowStep(id);
+      lastScrollStepAtRef.current = 0;
       startAutoScrollLoop();
 
       const onPointerMove = (e: MouseEvent | TouchEvent) => {
@@ -274,6 +296,7 @@ function WebPointerDragList<T>({
       autoScrollForPointer,
       startAutoScrollLoop,
       agendaScrollRef,
+      measureScrollRowStep,
     ],
   );
 

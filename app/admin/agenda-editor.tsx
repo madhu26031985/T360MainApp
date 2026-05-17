@@ -6144,8 +6144,8 @@ export default function AgendaEditor() {
             data={agendaItems}
             keyExtractor={(item) => item.id}
             activationDistance={12}
-            autoscrollThreshold={72}
-            autoscrollSpeed={220}
+            autoscrollThreshold={80}
+            autoscrollSpeed={90}
             onDragEnd={({ data }) => {
               void reorderAgendaItems(data);
               clearSectionDragArmState();
@@ -6406,8 +6406,8 @@ export default function AgendaEditor() {
               data={agendaItems}
               keyExtractor={(item) => item.id}
               activationDistance={12}
-              autoscrollThreshold={72}
-              autoscrollSpeed={220}
+              autoscrollThreshold={80}
+              autoscrollSpeed={90}
               onDragEnd={({ data }) => {
                 void reorderAgendaItems(data);
                 clearSectionDragArmState();
