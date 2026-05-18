@@ -334,3 +334,23 @@ export function prefetchClubLandingCritical(clubId: string | null | undefined): 
     /* ignore prefetch errors */
   });
 }
+
+/** True when the club has at least one closed (completed) meeting. */
+export async function fetchClubHasCompletedMeeting(clubId: string): Promise<boolean> {
+  try {
+    const { count, error } = await supabase
+      .from('app_club_meeting')
+      .select('id', { count: 'exact', head: true })
+      .eq('club_id', clubId)
+      .eq('meeting_status', 'close');
+
+    if (error) {
+      console.warn('Club completed meeting check:', error.message);
+      return false;
+    }
+    return (count ?? 0) > 0;
+  } catch (e) {
+    console.warn('Club completed meeting check error:', e);
+    return false;
+  }
+}

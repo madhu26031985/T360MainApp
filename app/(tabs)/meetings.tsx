@@ -7,7 +7,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { prefetchToastmasterCorner } from '@/lib/prefetchToastmasterCorner';
-import { Building2, Lock, FileText, ChevronRight, ChevronDown, ChevronUp, ClipboardList } from 'lucide-react-native';
+import { Building2, Clock, Lock, FileText, ChevronRight, ChevronDown, ChevronUp, ClipboardList } from 'lucide-react-native';
 import ClubSwitcher from '@/components/ClubSwitcher';
 import OpenMeetingsHorizonCard from '@/components/OpenMeetingsHorizonCard';
 import { MeetingRolesTabPanel } from '@/components/MeetingRolesTabPanel';

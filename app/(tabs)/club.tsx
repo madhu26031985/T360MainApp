@@ -43,6 +43,7 @@ import { supabase } from '@/lib/supabase';
 import type { ClubInfoManagementBundle, ClubSocialUrlsRow } from '@/lib/clubInfoManagementQuery';
 import {
   fetchClubLandingCritical,
+  fetchClubHasCompletedMeeting,
   getCachedClubLandingCritical,
   type ExcommPreviewRow,
   type MemberPreview,
@@ -2977,11 +2978,16 @@ export default function MyClub() {
     GeneralEvaluatorScoringRow[]
   >([]);
   const [landingLoading, setLandingLoading] = useState(false);
+  /** null = checking; hide meeting insights until at least one closed meeting exists. */
+  const [clubHasCompletedMeeting, setClubHasCompletedMeeting] = useState<boolean | null>(null);
+
+  const showClubMeetingInsights = clubHasCompletedMeeting === true;
 
   useEffect(() => {
     let cancelled = false;
 
     if (!user?.currentClubId) {
+      setClubHasCompletedMeeting(null);
       setBundle(null);
       setSocial(null);
       setExcommPreview([]);
@@ -3191,8 +3197,17 @@ export default function MyClub() {
       }
     };
 
-    void runCritical();
-    void runSecondary();
+    const bootstrap = async () => {
+      const hasCompleted = await fetchClubHasCompletedMeeting(clubId);
+      if (cancelled) return;
+      setClubHasCompletedMeeting(hasCompleted);
+      void runCritical();
+      if (hasCompleted) {
+        void runSecondary();
+      }
+    };
+
+    void bootstrap();
 
     return () => {
       cancelled = true;
@@ -3201,7 +3216,7 @@ export default function MyClub() {
 
   useEffect(() => {
     const clubId = user?.currentClubId;
-    if (!clubId) {
+    if (!clubId || !showClubMeetingInsights) {
       setClubStats(null);
       setClubStatsLoading(false);
       return;
@@ -3215,7 +3230,7 @@ export default function MyClub() {
 
   useEffect(() => {
     const clubId = user?.currentClubId;
-    if (!clubId || !bundle) return;
+    if (!clubId || !bundle || !showClubMeetingInsights) return;
     const warmStats = clubStatsByDays[clubStatsPeriodDays];
     if (warmStats) {
       setClubStats(warmStats);
@@ -3246,7 +3261,7 @@ export default function MyClub() {
     };
     // Intentionally omit clubStatsByDays: adding it re-fetched whenever this effect populated the cache.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.currentClubId, clubStatsPeriodDays, bundle]);
+  }, [user?.currentClubId, clubStatsPeriodDays, bundle, showClubMeetingInsights]);
 
   useEffect(() => {
     // Keep skeleton visible only when we truly have no data.
@@ -3596,7 +3611,7 @@ export default function MyClub() {
                       </>
                     ) : null}
 
-                    {bundle ? (
+                    {bundle && showClubMeetingInsights ? (
                       <>
                         <View style={styles.clubTopDivider} />
                         <View style={styles.clubTopBlock}>
@@ -3622,7 +3637,8 @@ export default function MyClub() {
                   </View>
                 </View>
 
-                <View style={styles.clubTopFlatBox}>
+                {showClubMeetingInsights ? (
+                  <View style={styles.clubTopFlatBox}>
                   <View style={styles.clubTopBlock}>
                     <MemoDeliveredHighlightCarousel
                       sectionTitle="Toastmaster & theme — last 6 months"
@@ -3684,6 +3700,9 @@ export default function MyClub() {
                     <MemoGeneralEvaluatorScoringCarousel rows={generalEvaluatorScoringRows} variant="embedded" />
                   </View>
                   <View style={styles.clubTopDivider} />
+                  </View>
+                ) : null}
+                <View style={styles.clubTopFlatBox}>
                   <View style={styles.clubTopBlock}>
                   {/* Connect */}
                   <View style={styles.embeddedSection}>
