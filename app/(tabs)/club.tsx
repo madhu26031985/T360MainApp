@@ -51,6 +51,7 @@ import {
 import { DEFAULT_TOASTMASTERS_CLUB_MISSION } from '@/lib/defaultClubMission';
 import { avatarUrlForDisplay } from '@/lib/avatarDisplayUrl';
 import { initialsFromName, useShouldLoadNetworkAvatars } from '@/lib/networkAvatarPolicy';
+import { mapTimerReportSpeechCategoryToAggregate } from '@/lib/timerReportSpeechCategory';
 
 /** Web: defer offscreen images; async decode. Native: no-op spread. */
 function webImageExtra(lazy: boolean): Record<string, string> {
@@ -1220,23 +1221,6 @@ async function fetchTimerMeetingWiseLast6Months(clubId: string): Promise<TimerMe
       { key: 'table_topic_speakers', label: 'Table topic speakers', qualified: 0, total: 0 },
       { key: 'educational_speech', label: 'Educational speech', qualified: 0, total: 0 },
     ];
-    const mapCategoryKey = (
-      raw: string
-    ): 'prepared_speeches' | 'evaluation' | 'table_topic_speakers' | 'educational_speech' | null => {
-      const v = (raw || '').trim().toLowerCase();
-      if (v === 'prepared_speech' || v === 'prepared_speeches' || v === 'prepared speech') {
-        return 'prepared_speeches';
-      }
-      if (v === 'evaluation' || v === 'evaluations') return 'evaluation';
-      if (v === 'table_topic_speaker' || v === 'table_topic_speakers' || v === 'table topic speaker') {
-        return 'table_topic_speakers';
-      }
-      if (v === 'educational_session' || v === 'educational_speech' || v === 'educational speech') {
-        return 'educational_speech';
-      }
-      return null;
-    };
-
     for (const row of timerRows) {
       const meeting = meetingById.get(row.meeting_id);
       if (!meeting) continue;
@@ -1255,7 +1239,7 @@ async function fetchTimerMeetingWiseLast6Months(clubId: string): Promise<TimerMe
       }
       const target = grouped.get(row.meeting_id);
       if (!target) continue;
-      const categoryKey = mapCategoryKey(row.speech_category);
+      const categoryKey = mapTimerReportSpeechCategoryToAggregate(row.speech_category);
       if (!categoryKey) continue;
       const slot = target.categoryStats.find((s) => s.key === categoryKey);
       if (!slot) continue;

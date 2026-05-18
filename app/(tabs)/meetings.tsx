@@ -7,8 +7,9 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { prefetchToastmasterCorner } from '@/lib/prefetchToastmasterCorner';
-import { Building2, Clock, Lock, FileText, ChevronRight, ChevronDown, ChevronUp, ClipboardList } from 'lucide-react-native';
+import { Building2, Lock, FileText, ChevronRight, ChevronDown, ChevronUp, ClipboardList } from 'lucide-react-native';
 import ClubSwitcher from '@/components/ClubSwitcher';
+import OpenMeetingsHorizonCard from '@/components/OpenMeetingsHorizonCard';
 import { MeetingRolesTabPanel } from '@/components/MeetingRolesTabPanel';
 import { MeetingActionsTabPanel } from '@/components/MeetingActionsTabPanel';
 import { MeetingEvaluationTabPanel } from '@/components/MeetingEvaluationTabPanel';
@@ -1154,21 +1155,11 @@ export default function ClubMeetings() {
                 })()}
               </View>
             ) : (
-              <View style={[styles.noMeetingsCard, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
-                <Text style={[styles.noMeetingsText, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3}>
-                  Something exciting is coming! 🚀
-                </Text>
-                <Text style={[styles.noMeetingsSubtext, { color: theme.colors.textSecondary }]} maxFontSizeMultiplier={1.3}>
-                  Your VPE is preparing upcoming meetings.
-                </Text>
-                <Text style={[styles.noMeetingsSubtext, { color: theme.colors.textSecondary }]} maxFontSizeMultiplier={1.3}>
-                  Stay tuned or connect with{' '}
-                  <Text style={[styles.vpeName, { color: theme.colors.primary, fontWeight: '600' }]} maxFontSizeMultiplier={1.3}>
-                    {vpeName.trim().split(/\s+/).filter(Boolean)[0] || vpeName}
-                  </Text>
-                  {' '}for details.
-                </Text>
-              </View>
+              <OpenMeetingsHorizonCard
+                vpeName={vpeName}
+                borderColor={theme.colors.border}
+                primaryColor={theme.colors.primary}
+              />
             )}
           </View>
 
@@ -1859,9 +1850,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginTop: 8,
     textAlign: 'center',
-  },
-  vpeName: {
-    fontWeight: '600',
   },
   nextMeetingsSection: {
     paddingBottom: 16,

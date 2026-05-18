@@ -12,7 +12,6 @@ import {
   ChevronRight,
   GraduationCap,
   History,
-  Home,
   Info,
   Landmark,
   ListChecks,
@@ -133,7 +132,7 @@ function TrainingSection({
 const EXCOMM_COUNT = 6;
 const CLUB_OPS_COUNT = 3;
 const ROLE_BOOKING_COUNT = 11;
-const MEMBER_COUNT = 8;
+const MEMBER_COUNT = 7;
 
 export default function T360TrainingScreen() {
   return (
@@ -324,7 +323,7 @@ export default function T360TrainingScreen() {
           />
         </TrainingSection>
 
-        <TrainingSection label="For All Other Users" count={MEMBER_COUNT}>
+        <TrainingSection label="Tab information" count={MEMBER_COUNT}>
           <TrainingRow
             icon={<History size={17} color="#0284C7" strokeWidth={2} />}
             iconBackgroundColor="#F0F9FF"
@@ -335,23 +334,16 @@ export default function T360TrainingScreen() {
           <TrainingRow
             icon={<User size={17} color="#BE185D" strokeWidth={2} />}
             iconBackgroundColor="#FDF2F8"
-            title="My Profile"
+            title="Home - My Profile"
             description="Photo, contact info, About section, social links, and why it matters."
             onPress={() => router.push('/t360-training-my-profile')}
           />
           <TrainingRow
             icon={<TrendingUp size={17} color="#2563EB" strokeWidth={2} />}
             iconBackgroundColor="#EFF6FF"
-            title="My Growth"
+            title="Home - My Growth"
             description="Attendance, awards, role insights across four tracks, growth intelligence."
             onPress={() => router.push('/t360-training-my-growth')}
-          />
-          <TrainingRow
-            icon={<Home size={17} color="#0D9488" strokeWidth={2} />}
-            iconBackgroundColor="#F0FDFA"
-            title="Getting Started with Home Tab"
-            description="Participate, prepare, and track your Toastmasters journey in one place."
-            onPress={() => router.push('/t360-training-home-tab')}
           />
           <TrainingRow
             icon={<Landmark size={17} color="#CA8A04" strokeWidth={2} />}

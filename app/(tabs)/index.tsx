@@ -83,6 +83,16 @@ import { prefetchVpeNudges } from '@/lib/prefetchVpeNudges';
 import { prefetchClubLandingCritical } from '@/lib/clubTabLandingData';
 import { prefetchProfileSnapshot } from '@/lib/profileSnapshot';
 import { prefetchMyRoleInsightsPanel } from '@/components/MyRoleInsightsPanel';
+import OpenMeetingsHorizonCard from '@/components/OpenMeetingsHorizonCard';
+import {
+  buildHomeRoleBookingInsights,
+  type HomeRoleBookingInsight,
+} from '@/lib/homeRoleBookingInsights';
+import {
+  fetchMyRoleInsightsCached,
+  getCachedMyRoleInsights,
+  type InsightCategory,
+} from '@/lib/myRoleInsights';
 import { prefetchMyAttendancePanel } from '@/components/MyAttendancePanel';
 import { prefetchMyAwardsPanel } from '@/components/MyAwardsPanel';
 import { prefetchLiveVotingSnapshot } from '@/lib/liveVotingSnapshot';
@@ -1313,6 +1323,40 @@ export default function MyJourney() {
     | 'vpe_open_meetings_3'
     | 'vpe_smart_daily_insight';
 
+  type MyTasksCarouselItem =
+    | { kind: 'reminder'; key: PendingMeetingReminderKey; text: string }
+    | { kind: 'role_insight'; category: InsightCategory; text: string };
+
+  const [roleBookingInsights, setRoleBookingInsights] = useState<HomeRoleBookingInsight[]>([]);
+  const [roleBookingInsightsReady, setRoleBookingInsightsReady] = useState(false);
+
+  useEffect(() => {
+    if (!user?.currentClubId || !user?.id) {
+      setRoleBookingInsights([]);
+      setRoleBookingInsightsReady(false);
+      return;
+    }
+    const clubId = user.currentClubId;
+    const userId = user.id;
+    let cancelled = false;
+
+    const cached = getCachedMyRoleInsights(clubId, userId);
+    if (cached) {
+      setRoleBookingInsights(buildHomeRoleBookingInsights(cached.map));
+      setRoleBookingInsightsReady(true);
+    }
+
+    void fetchMyRoleInsightsCached(clubId, userId).then((payload) => {
+      if (cancelled) return;
+      setRoleBookingInsights(buildHomeRoleBookingInsights(payload.map));
+      setRoleBookingInsightsReady(true);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.currentClubId, user?.id]);
+
   const pendingMeetingReminders = useMemo((): { key: PendingMeetingReminderKey; text: string }[] => {
     const name =
       (user?.fullName || '')
@@ -1421,6 +1465,23 @@ export default function MyJourney() {
     vpeNudgesSnapshot,
   ]);
 
+  const myTasksCarouselItems = useMemo((): MyTasksCarouselItem[] => {
+    if (pendingMeetingReminders.length > 0) {
+      return pendingMeetingReminders.map((r) => ({
+        kind: 'reminder',
+        key: r.key,
+        text: r.text,
+      }));
+    }
+    return roleBookingInsights.map((insight) => ({
+      kind: 'role_insight' as const,
+      category: insight.category,
+      text: insight.text,
+    }));
+  }, [pendingMeetingReminders, roleBookingInsights]);
+
+  const showRoleBookingInsights = pendingMeetingReminders.length === 0 && roleBookingInsights.length > 0;
+
   const userFirstName = useMemo(
     () =>
       (user?.fullName || '')
@@ -1494,28 +1555,35 @@ export default function MyJourney() {
     setShowRolePlayerCongratsModal(false);
   }, [currentOpenMeetingId, user?.id]);
 
-  const pendingRemindersKey = pendingMeetingReminders.map((r) => r.key).join('|');
+  const myTasksCarouselKey = myTasksCarouselItems
+    .map((item) => (item.kind === 'reminder' ? item.key : `${item.category}:${item.text}`))
+    .join('|');
 
   const [heroReminderSlide, setHeroReminderSlide] = useState(0);
 
   useEffect(() => {
     setHeroReminderSlide(0);
-  }, [pendingRemindersKey]);
+  }, [myTasksCarouselKey]);
 
   useEffect(() => {
-    const n = pendingMeetingReminders.length;
+    const n = myTasksCarouselItems.length;
     if (n <= 1) return;
     const id = setInterval(() => {
       setHeroReminderSlide((i) => (i + 1) % n);
     }, 5000);
     return () => clearInterval(id);
-  }, [pendingRemindersKey, pendingMeetingReminders.length]);
+  }, [myTasksCarouselKey, myTasksCarouselItems.length]);
 
   useEffect(() => {
-    if (pendingMeetingReminders.length === 0) return;
+    if (myTasksCarouselItems.length === 0) return;
     heroReminderFade.value = 0.35;
     heroReminderFade.value = withTiming(1, { duration: 400 });
-  }, [heroReminderSlide, pendingMeetingReminders.length]);
+  }, [heroReminderSlide, myTasksCarouselItems.length]);
+
+  const openRoleInsightDetail = useCallback((category: InsightCategory) => {
+    void prefetchMyRoleInsightsPanel(user?.currentClubId, user?.id);
+    router.push({ pathname: '/my-growth-role-detail', params: { category } });
+  }, [user?.currentClubId, user?.id]);
 
   const openPendingReminderTarget = useCallback(
     (key: PendingMeetingReminderKey) => {
@@ -2056,15 +2124,29 @@ export default function MyJourney() {
                       <JourneyListCard
                         title="My Tasks"
                         description={
-                          pendingMeetingReminders.length > 0 ? (
-                            <Animated.View style={[styles.myTasksAnimatedWrap, heroReminderTextAnimatedStyle]}>
-                              <Text style={[styles.myTasksAnimatedText, { color: N.accent }]} maxFontSizeMultiplier={1.2}>
-                                {pendingMeetingReminders[heroReminderSlide]?.text ?? ''}
-                              </Text>
-                            </Animated.View>
-                          ) : (
+                          myTasksCarouselItems.length > 0 ? (
+                            <View style={styles.myTasksInsightDesc}>
+                              {showRoleBookingInsights ? (
+                                <Text
+                                  style={[styles.myTasksInsightKicker, { color: theme.colors.textSecondary }]}
+                                  maxFontSizeMultiplier={1.2}
+                                >
+                                  Smart insights for role booking
+                                </Text>
+                              ) : null}
+                              <Animated.View style={[styles.myTasksAnimatedWrap, heroReminderTextAnimatedStyle]}>
+                                <Text style={[styles.myTasksAnimatedText, { color: N.accent }]} maxFontSizeMultiplier={1.2}>
+                                  {myTasksCarouselItems[heroReminderSlide]?.text ?? ''}
+                                </Text>
+                              </Animated.View>
+                            </View>
+                          ) : roleBookingInsightsReady ? (
                             <Text style={[styles.journeyListDesc, { color: theme.colors.textSecondary }]} maxFontSizeMultiplier={1.2}>
                               All set, champ! No tasks pending.
+                            </Text>
+                          ) : (
+                            <Text style={[styles.journeyListDesc, { color: theme.colors.textSecondary }]} maxFontSizeMultiplier={1.2}>
+                              Smart insights for role booking…
                             </Text>
                           )
                         }
@@ -2072,14 +2154,18 @@ export default function MyJourney() {
                         color="#D97706"
                         iconBackgroundColor="#FFFBEB"
                         onPress={() => {
-                          const item = pendingMeetingReminders[heroReminderSlide];
-                          if (item) {
-                            openPendingReminderTarget(item.key);
+                          const item = myTasksCarouselItems[heroReminderSlide];
+                          if (!item) {
+                            if (roleBookingInsightsReady) setShowNoTasksModal(true);
                             return;
                           }
-                          setShowNoTasksModal(true);
+                          if (item.kind === 'role_insight') {
+                            openRoleInsightDetail(item.category);
+                            return;
+                          }
+                          openPendingReminderTarget(item.key);
                         }}
-                        animateIconOnly={pendingMeetingReminders.length > 0}
+                        animateIconOnly={myTasksCarouselItems.length > 0}
                         inline
                       />
                     ) : null}
@@ -2162,13 +2248,17 @@ export default function MyJourney() {
                   <TouchableOpacity
                     activeOpacity={0.7}
                     onPress={() => {
-                      if (!currentOpenMeetingId && canManageClubMeetings) {
+                      if (!currentOpenMeetingId && isExComm) {
                         router.push('/admin/meeting-management');
                         return;
                       }
                       router.push('/(tabs)/meetings');
                     }}
-                    style={styles.meetingDetailsRow}
+                    style={
+                      !currentOpenMeetingId && !isExComm
+                        ? styles.meetingDetailsRowHorizon
+                        : styles.meetingDetailsRow
+                    }
                   >
                   {currentOpenMeetingId ? (
                     <>
@@ -2209,7 +2299,7 @@ export default function MyJourney() {
                     </Text>
                   </View>
                     </>
-              ) : canManageClubMeetings ? (
+              ) : isExComm ? (
                   <View style={styles.noOpenMeetingPlaceholder}>
                     <View style={[styles.noOpenMeetingIcon, { backgroundColor: theme.colors.primary + '15' }]}>
                       <Calendar size={22} color={theme.colors.primary} />
@@ -2228,17 +2318,12 @@ export default function MyJourney() {
                     <ChevronRight size={18} color={theme.colors.textSecondary} />
                   </View>
               ) : (
-                  <View style={styles.noOpenMeetingMemberMessage}>
-                    <Text style={[styles.meetingBarSub, { color: theme.colors.textSecondary }]} maxFontSizeMultiplier={1.2}>
-                      Your VPE is preparing upcoming meetings.
-                    </Text>
-                    <Text
-                      style={[styles.meetingBarSub, styles.noOpenMeetingMemberSubline, { color: theme.colors.textSecondary }]}
-                      maxFontSizeMultiplier={1.2}
-                    >
-                      {`Stay tuned or connect with ${clubVpeName} for details.`}
-                    </Text>
-                  </View>
+                  <OpenMeetingsHorizonCard
+                    vpeName={clubVpeName}
+                    borderColor={N.border}
+                    primaryColor={theme.colors.primary}
+                    style={styles.homeOpenMeetingsHorizonCard}
+                  />
               )}
                   </TouchableOpacity>
 
@@ -2918,8 +3003,18 @@ const styles = StyleSheet.create({
     lineHeight: 14,
     marginTop: 2,
   },
+  myTasksInsightDesc: {
+    marginTop: 2,
+    minWidth: 0,
+  },
+  myTasksInsightKicker: {
+    fontSize: 10,
+    fontWeight: '600',
+    lineHeight: 13,
+    marginBottom: 2,
+  },
   myTasksAnimatedWrap: {
-    marginTop: 4,
+    marginTop: 0,
   },
   myTasksAnimatedText: {
     fontSize: 11,
@@ -2946,6 +3041,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 11,
+  },
+  meetingDetailsRowHorizon: {
+    alignSelf: 'stretch',
+  },
+  homeOpenMeetingsHorizonCard: {
+    flex: 1,
+    width: '100%',
   },
   meetingStatusPill: {
     paddingVertical: 6,
