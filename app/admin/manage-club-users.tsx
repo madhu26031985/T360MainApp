@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/lib/supabase';
 import { EXCOMM_UI } from '@/lib/excommUiTokens';
+import { goBackOrReplace } from '@/lib/trainingBackNavigation';
 import {
   ArrowLeft,
   UserPlus,
@@ -215,7 +216,11 @@ export default function ManageClubUsers() {
     <SafeAreaView style={[styles.container, { backgroundColor: N.page }]} edges={['top']}>
       <View style={styles.pageMain}>
       <View style={[styles.header, { backgroundColor: N.surface, borderBottomColor: N.border }]}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => goBackOrReplace('/(tabs)/admin')}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
           <ArrowLeft size={22} color={N.iconMuted} strokeWidth={2} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: N.text }]} maxFontSizeMultiplier={1.3}>
@@ -274,22 +279,22 @@ export default function ManageClubUsers() {
 
           <View style={[styles.notionGroup, { borderColor: N.border }]}>
             <NotionActionRow
-              title="Invite new club members"
+              title="Invite Club Users"
               description="Send invites and grow your club community."
               icon={<UserPlus size={18} color={ICON_TILE.invite.fg} strokeWidth={1.75} />}
               iconBackground={ICON_TILE.invite.bg}
               onPress={() => router.push('/admin/invite-new-user')}
               onHelpPress={() => router.push('/t360-training-excomm-invite-members')}
-              helpAccessibilityLabel="Invite members help"
+              helpAccessibilityLabel="Invite Club Users help"
             />
             <NotionActionRow
-              title="Manage club members"
+              title="Manage Club Users"
               description="Organize members, roles, and access in one place."
               icon={<Users size={18} color={ICON_TILE.manage.fg} strokeWidth={1.75} />}
               iconBackground={ICON_TILE.manage.bg}
               onPress={() => router.push('/admin/manage-existing-users')}
               onHelpPress={() => router.push('/t360-training-excomm-manage-club-members')}
-              helpAccessibilityLabel="Manage club members help"
+              helpAccessibilityLabel="Manage Club Users help"
               isLast
             />
           </View>

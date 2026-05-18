@@ -5,6 +5,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase, supabaseUrl } from '@/lib/supabase';
 import { EXCOMM_UI } from '@/lib/excommUiTokens';
+import { goBackOrReplace } from '@/lib/trainingBackNavigation';
 import { ArrowLeft, Mail, User, Crown, Shield, Eye, UserCheck, Clock, Send, Trash2, CircleCheck as CheckCircle, Building2 } from 'lucide-react-native';
 
 /** Notion-like neutrals */
@@ -587,7 +588,11 @@ export default function InviteNewUser() {
     <SafeAreaView style={[styles.container, { backgroundColor: N.page }]}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={0}>
         <View style={[styles.header, { backgroundColor: N.surface, borderBottomColor: N.border }]}>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => goBackOrReplace('/(tabs)/admin')}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
             <ArrowLeft size={22} color={N.iconMuted} strokeWidth={2} />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: N.text }]} maxFontSizeMultiplier={1.3}>

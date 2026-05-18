@@ -5,6 +5,7 @@ import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { EXCOMM_UI } from '@/lib/excommUiTokens';
+import { goBackOrReplace } from '@/lib/trainingBackNavigation';
 import {
   ArrowLeft,
   CreditCard as Edit3,
@@ -506,7 +507,7 @@ export default function ManageExistingUsers() {
       <View style={[styles.header, { backgroundColor: N.surface, borderBottomColor: N.border }]}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => router.back()}
+          onPress={() => goBackOrReplace('/(tabs)/admin')}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
           <ArrowLeft size={22} color={N.iconMuted} strokeWidth={2} />

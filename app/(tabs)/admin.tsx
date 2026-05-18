@@ -6,10 +6,10 @@ import {
   Settings,
   Vote,
   UserPlus,
+  Users,
   Building2,
   CalendarPlus,
   Crown,
-  FileText,
   Share2,
   ChevronRight,
   HelpCircle,
@@ -40,26 +40,16 @@ const N = {
   successSoft: 'rgba(15, 123, 108, 0.12)',
 };
 
-const CLUB_OPERATIONS_SUB_PAGES = [
+const SETTING_UP_CLUB_SUB_PAGES = [
   {
     title: 'Club Info',
     route: '/admin/club-info-management' as const,
     Icon: Settings,
   },
   {
-    title: 'Club ExComm',
-    route: '/admin/excomm-management' as const,
-    Icon: Crown,
-  },
-  {
     title: 'Club Social Media',
     route: '/admin/social-media-management' as const,
     Icon: Share2,
-  },
-  {
-    title: 'Club Resources',
-    route: '/admin/member-resources-management' as const,
-    Icon: FileText,
   },
   {
     title: 'Club FAQ',
@@ -296,18 +286,7 @@ export default function AdminPanel() {
     );
   }
 
-  const startHereItems = [
-    ...(canSeeAdminFeature('user_management')
-      ? [
-          {
-            key: 'users',
-            label: 'Invite new club members',
-            icon: <UserPlus size={18} color="#16A34A" strokeWidth={1.75} />,
-            iconBackgroundColor: '#ECFDF5',
-            onPress: () => router.push('/admin/manage-club-users'),
-          },
-        ]
-      : []),
+  const meetingManagementItems = [
     ...(canSeeAdminFeature('meeting_operations')
       ? [
           {
@@ -332,17 +311,50 @@ export default function AdminPanel() {
       : []),
   ];
 
-  const clubOpsItems = CLUB_OPERATIONS_SUB_PAGES.map(({ title, route, Icon }) => {
+  const clubUserManagementItems = [
+    ...(canSeeAdminFeature('user_management')
+      ? [
+          {
+            key: 'invite-club-users',
+            label: 'Invite Club Users',
+            icon: <UserPlus size={18} color="#16A34A" strokeWidth={1.75} />,
+            iconBackgroundColor: '#ECFDF5',
+            onPress: () => router.push('/admin/invite-new-user'),
+          },
+          {
+            key: 'manage-club-users',
+            label: 'Manage Club Users',
+            icon: <Users size={18} color="#EA580C" strokeWidth={1.75} />,
+            iconBackgroundColor: '#FFF7ED',
+            onPress: () => router.push('/admin/manage-existing-users'),
+          },
+        ]
+      : []),
+    ...(canSeeAdminFeature('club_operations')
+      ? [
+          {
+            key: 'excomm',
+            label: 'Manage ExComm Roles',
+            icon: <Crown size={18} color={EXCOMM_UI.pillFg} strokeWidth={1.75} />,
+            iconBackgroundColor: EXCOMM_UI.pillBg,
+            onPress: () => {
+              prefetchExcommManagement(queryClient, user?.currentClubId);
+              router.push('/admin/excomm-management');
+            },
+          },
+        ]
+      : []),
+  ];
+
+  const settingUpClubItems = SETTING_UP_CLUB_SUB_PAGES.map(({ title, route, Icon }) => {
     const tilePalette =
       title === 'Club Info'
         ? { icon: '#334155', bg: '#F1F5F9' }
-        : title === 'Club ExComm'
-          ? { icon: EXCOMM_UI.pillFg, bg: EXCOMM_UI.pillBg }
-          : title === 'Club Social Media'
-            ? { icon: '#0891B2', bg: '#ECFEFF' }
-            : title === 'Club FAQ'
-              ? { icon: '#7C3AED', bg: '#F5F3FF' }
-              : { icon: '#475569', bg: '#F8FAFC' };
+        : title === 'Club Social Media'
+          ? { icon: '#0891B2', bg: '#ECFEFF' }
+          : title === 'Club FAQ'
+            ? { icon: '#7C3AED', bg: '#F5F3FF' }
+            : { icon: '#475569', bg: '#F8FAFC' };
 
     return {
       key: route,
@@ -381,110 +393,126 @@ export default function AdminPanel() {
             clubIconColor="#334155"
           />
           <View style={[styles.adminMasterDivider, { backgroundColor: N.border }]} />
-          {(canSeeAdminFeature('meeting_operations') ||
-            canSeeAdminFeature('user_management') ||
-            canSeeAdminFeature('voting_operations')) && (
-            <>
-              {shouldShowOnboarding && onboardingStep < 3 && (
-                <View style={[styles.onboardingCard, { backgroundColor: N.page, borderColor: N.border }]}>
-                  <View style={styles.onboardingHeaderRow}>
-                    <View style={[styles.onboardingBadge, { backgroundColor: N.accentSoft, borderColor: N.accentSoftBorder }]}>
-                      <Text style={[styles.onboardingBadgeText, { color: N.accent }]} maxFontSizeMultiplier={1.2}>
-                        {Math.min(3, onboardingStep + 1)}
-                      </Text>
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={[styles.onboardingTitle, { color: N.text }]} maxFontSizeMultiplier={1.2}>
-                        Getting started
-                      </Text>
-                      <Text style={[styles.onboardingSubtitle, { color: N.textSecondary }]} maxFontSizeMultiplier={1.2}>
-                        {onboardingLoading ? 'Loading…' : 'Complete each step in order.'}
-                      </Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.timeline}>
-                    {[
-                      { n: 1 as const, label: 'Create meeting' },
-                      { n: 2 as const, label: 'Book a role' },
-                      { n: 3 as const, label: 'Close meeting' },
-                    ].map((step) => {
-                      const done = onboardingStep >= step.n;
-                      const isActive = onboardingStep < 3 && step.n === onboardingStep + 1;
-                      const circleBackground = done ? N.success : isActive ? N.accent : N.surface;
-                      const circleText = done ? '✓' : String(step.n);
-                      const circleTextColor = done || isActive ? N.surface : N.textSecondary;
-
-                      return (
-                        <View key={step.n} style={styles.timelineRow}>
-                          <View style={styles.timelineIconCol}>
-                            <View
-                              style={[
-                                styles.timelineCircle,
-                                { backgroundColor: circleBackground },
-                                !done && !isActive && {
-                                  borderWidth: 1,
-                                  borderColor: N.borderStrong,
-                                },
-                              ]}
-                            >
-                              <Text style={[styles.timelineCircleText, { color: circleTextColor }]} maxFontSizeMultiplier={1.3}>
-                                {circleText}
-                              </Text>
-                            </View>
-                            {step.n !== 3 && (
-                              <View
-                                style={[
-                                  styles.timelineLine,
-                                  { backgroundColor: onboardingStep >= step.n ? N.accent : N.border },
-                                ]}
-                              />
-                            )}
-                          </View>
-                          <View style={styles.timelineTextCol}>
-                            <Text
-                              style={[
-                                styles.timelineLabel,
-                                {
-                                  color: done ? N.success : isActive ? N.text : N.textSecondary,
-                                  fontWeight: isActive ? '600' : '500',
-                                },
-                              ]}
-                              maxFontSizeMultiplier={1.2}
-                              numberOfLines={2}
-                            >
-                              {step.label}
-                            </Text>
-                            <Text style={[styles.timelineMeta, { color: N.textTertiary }]} maxFontSizeMultiplier={1.2}>
-                              {done ? 'Done' : step.n === onboardingStep + 1 ? 'In progress' : 'Not started'}
-                            </Text>
-                          </View>
-                        </View>
-                      );
-                    })}
-                  </View>
+          {shouldShowOnboarding && onboardingStep < 3 ? (
+            <View style={[styles.onboardingCard, { backgroundColor: N.page, borderColor: N.border }]}>
+              <View style={styles.onboardingHeaderRow}>
+                <View style={[styles.onboardingBadge, { backgroundColor: N.accentSoft, borderColor: N.accentSoftBorder }]}>
+                  <Text style={[styles.onboardingBadgeText, { color: N.accent }]} maxFontSizeMultiplier={1.2}>
+                    {Math.min(3, onboardingStep + 1)}
+                  </Text>
                 </View>
-              )}
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.onboardingTitle, { color: N.text }]} maxFontSizeMultiplier={1.2}>
+                    Getting started
+                  </Text>
+                  <Text style={[styles.onboardingSubtitle, { color: N.textSecondary }]} maxFontSizeMultiplier={1.2}>
+                    {onboardingLoading ? 'Loading…' : 'Complete each step in order.'}
+                  </Text>
+                </View>
+              </View>
 
-              <Text style={[styles.adminMasterSectionTitle, { color: N.textSecondary }]} maxFontSizeMultiplier={1.2}>
-                Start here
-              </Text>
-              <NotionActionList items={startHereItems} />
-            </>
-          )}
-          {canSeeAdminFeature('club_operations') && (
+              <View style={styles.timeline}>
+                {[
+                  { n: 1 as const, label: 'Create meeting' },
+                  { n: 2 as const, label: 'Book a role' },
+                  { n: 3 as const, label: 'Close meeting' },
+                ].map((step) => {
+                  const done = onboardingStep >= step.n;
+                  const isActive = onboardingStep < 3 && step.n === onboardingStep + 1;
+                  const circleBackground = done ? N.success : isActive ? N.accent : N.surface;
+                  const circleText = done ? '✓' : String(step.n);
+                  const circleTextColor = done || isActive ? N.surface : N.textSecondary;
+
+                  return (
+                    <View key={step.n} style={styles.timelineRow}>
+                      <View style={styles.timelineIconCol}>
+                        <View
+                          style={[
+                            styles.timelineCircle,
+                            { backgroundColor: circleBackground },
+                            !done && !isActive && {
+                              borderWidth: 1,
+                              borderColor: N.borderStrong,
+                            },
+                          ]}
+                        >
+                          <Text style={[styles.timelineCircleText, { color: circleTextColor }]} maxFontSizeMultiplier={1.3}>
+                            {circleText}
+                          </Text>
+                        </View>
+                        {step.n !== 3 && (
+                          <View
+                            style={[
+                              styles.timelineLine,
+                              { backgroundColor: onboardingStep >= step.n ? N.accent : N.border },
+                            ]}
+                          />
+                        )}
+                      </View>
+                      <View style={styles.timelineTextCol}>
+                        <Text
+                          style={[
+                            styles.timelineLabel,
+                            {
+                              color: done ? N.success : isActive ? N.text : N.textSecondary,
+                              fontWeight: isActive ? '600' : '500',
+                            },
+                          ]}
+                          maxFontSizeMultiplier={1.2}
+                          numberOfLines={2}
+                        >
+                          {step.label}
+                        </Text>
+                        <Text style={[styles.timelineMeta, { color: N.textTertiary }]} maxFontSizeMultiplier={1.2}>
+                          {done ? 'Done' : step.n === onboardingStep + 1 ? 'In progress' : 'Not started'}
+                        </Text>
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
+          ) : null}
+
+          {canSeeAdminFeature('club_operations') ? (
             <>
-              {(canSeeAdminFeature('meeting_operations') ||
-                canSeeAdminFeature('user_management') ||
-                canSeeAdminFeature('voting_operations')) && (
+              {(shouldShowOnboarding && onboardingStep < 3) ? (
                 <View style={[styles.sectionSpacer, { backgroundColor: 'transparent' }]} />
-              )}
+              ) : null}
               <Text style={[styles.adminMasterSectionTitle, { color: N.textSecondary }]} maxFontSizeMultiplier={1.2}>
-                Club operations
+                Setting Up the Club
               </Text>
-              <NotionActionList items={clubOpsItems} />
+              <NotionActionList items={settingUpClubItems} />
             </>
-          )}
+          ) : null}
+
+          {(canSeeAdminFeature('user_management') || canSeeAdminFeature('club_operations')) &&
+          clubUserManagementItems.length > 0 ? (
+            <>
+              {(shouldShowOnboarding && onboardingStep < 3) || canSeeAdminFeature('club_operations') ? (
+                <View style={[styles.sectionSpacer, { backgroundColor: 'transparent' }]} />
+              ) : null}
+              <Text style={[styles.adminMasterSectionTitle, { color: N.textSecondary }]} maxFontSizeMultiplier={1.2}>
+                Club User Management
+              </Text>
+              <NotionActionList items={clubUserManagementItems} />
+            </>
+          ) : null}
+
+          {meetingManagementItems.length > 0 ? (
+            <>
+              {(shouldShowOnboarding && onboardingStep < 3) ||
+              canSeeAdminFeature('club_operations') ||
+              ((canSeeAdminFeature('user_management') || canSeeAdminFeature('club_operations')) &&
+                clubUserManagementItems.length > 0) ? (
+                <View style={[styles.sectionSpacer, { backgroundColor: 'transparent' }]} />
+              ) : null}
+              <Text style={[styles.adminMasterSectionTitle, { color: N.textSecondary }]} maxFontSizeMultiplier={1.2}>
+                Meeting Management
+              </Text>
+              <NotionActionList items={meetingManagementItems} />
+            </>
+          ) : null}
         </View>
       </ScrollView>
     </SafeAreaView>
