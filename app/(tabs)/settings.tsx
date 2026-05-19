@@ -4,7 +4,7 @@ import { Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useState, useEffect } from 'react';
 import { router } from 'expo-router';
-import Constants from 'expo-constants';
+import { APP_VERSION_SETTINGS_LABEL } from '@/lib/appVersion';
 import * as WebBrowser from 'expo-web-browser';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { markT360ShareAppUsed } from '@/lib/t360OnboardingLocalMarkers';
@@ -600,7 +600,7 @@ Welcome to a seamless digital experience! 🚀`;
               We Salute Toastmasters
             </Text>
             <Text style={[styles.footerSubtext, { color: N.textTertiary }]} maxFontSizeMultiplier={1.3}>
-              {`Version ${Constants.expoConfig?.version ?? '92'}`}
+              {`Version ${APP_VERSION_SETTINGS_LABEL}`}
             </Text>
           </View>
         </ScrollView>
