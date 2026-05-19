@@ -217,7 +217,7 @@ export default function T360TrainingScreen() {
           />
         </TrainingSection>
 
-        <TrainingSection label="Club Operations" count={CLUB_OPS_COUNT}>
+        <TrainingSection label="Setting Up The Club" count={CLUB_OPS_COUNT}>
           <TrainingRow
             icon={<Info size={17} color="#334155" strokeWidth={2} />}
             iconBackgroundColor="#F8FAFC"
