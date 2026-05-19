@@ -20,6 +20,7 @@
     "doctor": "expo doctor",
     "fix-deps": "npx expo install --check && npm audit fix",
     "test:supabase": "node scripts/test-supabase-connection.js",
+    "verify:club-rpcs": "node scripts/verify-club-tab-rpcs.js",
     "test:web": "node scripts/start-product-web.js",
     "local:web": "node scripts/start-product-web.js",
     "serve:web-dist": "node scripts/serve-web-dist.mjs",

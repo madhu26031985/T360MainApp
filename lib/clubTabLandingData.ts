@@ -13,6 +13,7 @@ import {
 } from '@/lib/clubInfoManagementQuery';
 import type { ClubTabFaqItem, ClubTabSecondaryPayload, ClubTabSessionSnapshot } from '@/lib/clubTabSessionCache';
 import { writeClubTabSession } from '@/lib/clubTabSessionCache';
+import { prefetchClubStatsByDays } from '@/lib/clubTabStats';
 
 const CACHE_TTL_MS = 90_000;
 const PERSISTED_CACHE_TTL_MS = 12 * 60 * 60 * 1000;
@@ -394,34 +395,53 @@ export async function fetchClubTabSecondarySnapshot(
   }
 }
 
+let prefetchInFlight: { clubId: string; promise: Promise<void> } | null = null;
+
+async function loadClubTabSessionSnapshot(clubId: string): Promise<ClubTabSessionSnapshot> {
+  const [critical, hasCompleted] = await Promise.all([
+    fetchClubLandingCritical(clubId),
+    fetchClubHasCompletedMeeting(clubId),
+  ]);
+  let secondary: ClubTabSecondaryPayload | null = null;
+  let statsByDays: ClubTabSessionSnapshot['statsByDays'];
+  if (hasCompleted) {
+    const [secondarySnap, stats] = await Promise.all([
+      fetchClubTabSecondarySnapshot(clubId),
+      prefetchClubStatsByDays(clubId),
+    ]);
+    if (secondarySnap) {
+      secondary = { ...secondarySnap, faqItems: await fetchClubFaqItems(clubId) };
+    }
+    statsByDays = stats;
+  }
+  return {
+    clubId,
+    at: Date.now(),
+    hasCompletedMeeting: hasCompleted,
+    critical,
+    secondary,
+    statsByDays,
+  };
+}
+
 /** Prefetch critical + secondary into session cache before user opens Club tab. */
 export function prefetchClubTabSession(clubId: string | null | undefined): void {
   if (!clubId) return;
-  void (async () => {
+  if (prefetchInFlight?.clubId === clubId) return;
+
+  const promise = (async () => {
     try {
-      const [critical, hasCompleted] = await Promise.all([
-        fetchClubLandingCritical(clubId),
-        fetchClubHasCompletedMeeting(clubId),
-      ]);
-      let secondary: ClubTabSecondaryPayload | null = null;
-      if (hasCompleted) {
-        const snap = await fetchClubTabSecondarySnapshot(clubId);
-        if (snap) {
-          secondary = { ...snap, faqItems: await fetchClubFaqItems(clubId) };
-        }
-      }
-      const snapshot: ClubTabSessionSnapshot = {
-        clubId,
-        at: Date.now(),
-        hasCompletedMeeting: hasCompleted,
-        critical,
-        secondary,
-      };
+      const snapshot = await loadClubTabSessionSnapshot(clubId);
       writeClubTabSession(snapshot);
     } catch {
       /* ignore prefetch errors */
     }
   })();
+
+  prefetchInFlight = { clubId, promise };
+  void promise.finally(() => {
+    if (prefetchInFlight?.clubId === clubId) prefetchInFlight = null;
+  });
 }
 
 /** True when the club has at least one closed (completed) meeting. */

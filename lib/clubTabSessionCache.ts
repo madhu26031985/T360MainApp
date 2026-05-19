@@ -7,6 +7,7 @@ import {
   peekClubLandingCriticalCache,
   type ClubLandingCriticalPayload,
 } from '@/lib/clubTabLandingData';
+import type { ClubStatsCounts } from '@/lib/clubTabStats';
 
 export type ClubTabFaqItem = {
   id: string;
@@ -35,11 +36,14 @@ export type ClubTabSessionSnapshot = {
   hasCompletedMeeting: boolean;
   critical: ClubLandingCriticalPayload | null;
   secondary: ClubTabSecondaryPayload | null;
+  /** Meeting insights stats keyed by rolling period (days). */
+  statsByDays?: Record<number, ClubStatsCounts>;
 };
 
-const SESSION_TTL_MS = 90_000;
+/** Fresh session: skip repeat network on tab revisit within this window. */
+const SESSION_TTL_MS = 30 * 60 * 1000;
 /** After this age, show cached UI but refresh in the background on tab focus. */
-export const CLUB_TAB_BACKGROUND_REFRESH_MS = 45_000;
+export const CLUB_TAB_BACKGROUND_REFRESH_MS = 5 * 60 * 1000;
 
 let session: ClubTabSessionSnapshot | null = null;
 
@@ -86,4 +90,10 @@ export function peekClubTabCriticalSync(clubId: string): ClubLandingCriticalPayl
 
 export function peekClubTabSessionForHydrate(clubId: string): ClubTabSessionSnapshot | null {
   return peekClubTabSession(clubId) ?? peekClubTabSessionStale(clubId);
+}
+
+export function peekClubTabStatsByDays(clubId: string): Record<number, ClubStatsCounts> | null {
+  const snap = peekClubTabSessionForHydrate(clubId);
+  if (!snap?.statsByDays || Object.keys(snap.statsByDays).length === 0) return null;
+  return snap.statsByDays;
 }

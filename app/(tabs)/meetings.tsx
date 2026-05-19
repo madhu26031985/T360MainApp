@@ -1229,22 +1229,26 @@ export default function ClubMeetings() {
                 activeOpacity={0.8}
                 accessibilityLabel="Open meeting history page"
               >
-                <View style={[styles.meetingsQuickLinkIcon, { backgroundColor: theme.colors.textSecondary + '15' }]}>
-                  <Clock size={20} color="#6366F1" />
+                <View style={styles.meetingsQuickLinkRow}>
+                  <View style={[styles.meetingsQuickLinkIcon, { backgroundColor: theme.colors.textSecondary + '12' }]}>
+                    <Clock size={16} color="#6366F1" />
+                  </View>
+                  <View style={styles.meetingsQuickLinkTextCol}>
+                    <Text style={[styles.meetingsQuickLinkTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.25}>
+                      Meeting History
+                    </Text>
+                    <Text
+                      style={[styles.meetingsQuickLinkSubtitle, { color: theme.colors.textSecondary }]}
+                      maxFontSizeMultiplier={1.2}
+                      numberOfLines={2}
+                    >
+                      {isLoading
+                        ? 'Loading…'
+                        : `${meetingHistory.length} completed meeting${meetingHistory.length === 1 ? '' : 's'}`}
+                    </Text>
+                  </View>
+                  <ChevronRight size={14} color={theme.colors.textSecondary} />
                 </View>
-                <Text style={[styles.meetingsQuickLinkTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.25}>
-                  Meeting History
-                </Text>
-                <Text
-                  style={[styles.meetingsQuickLinkSubtitle, { color: theme.colors.textSecondary }]}
-                  maxFontSizeMultiplier={1.2}
-                  numberOfLines={2}
-                >
-                  {isLoading
-                    ? 'Loading…'
-                    : `${meetingHistory.length} completed meeting${meetingHistory.length === 1 ? '' : 's'}`}
-                </Text>
-                <ChevronRight size={14} color={theme.colors.textSecondary} style={styles.meetingsQuickLinkChevron} />
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -1256,20 +1260,24 @@ export default function ClubMeetings() {
                 activeOpacity={0.8}
                 accessibilityLabel="Open meeting reports page"
               >
-                <View style={[styles.meetingsQuickLinkIcon, { backgroundColor: '#3b82f615' }]}>
-                  <ClipboardList size={20} color="#0EA5E9" />
+                <View style={styles.meetingsQuickLinkRow}>
+                  <View style={[styles.meetingsQuickLinkIcon, { backgroundColor: theme.colors.textSecondary + '12' }]}>
+                    <ClipboardList size={16} color="#0EA5E9" />
+                  </View>
+                  <View style={styles.meetingsQuickLinkTextCol}>
+                    <Text style={[styles.meetingsQuickLinkTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.25}>
+                      Meeting Reports
+                    </Text>
+                    <Text
+                      style={[styles.meetingsQuickLinkSubtitle, { color: theme.colors.textSecondary }]}
+                      maxFontSizeMultiplier={1.2}
+                      numberOfLines={2}
+                    >
+                      Historical reports available
+                    </Text>
+                  </View>
+                  <ChevronRight size={14} color={theme.colors.textSecondary} />
                 </View>
-                <Text style={[styles.meetingsQuickLinkTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.25}>
-                  Meeting Reports
-                </Text>
-                <Text
-                  style={[styles.meetingsQuickLinkSubtitle, { color: theme.colors.textSecondary }]}
-                  maxFontSizeMultiplier={1.2}
-                  numberOfLines={2}
-                >
-                  Historical reports available
-                </Text>
-                <ChevronRight size={14} color={theme.colors.textSecondary} style={styles.meetingsQuickLinkChevron} />
               </TouchableOpacity>
             </View>
           </View>
@@ -1771,34 +1779,36 @@ const styles = StyleSheet.create({
   },
   meetingsQuickLinkBox: {
     flex: 1,
-    padding: 14,
-    minHeight: 120,
+    padding: 10,
     borderWidth: StyleSheet.hairlineWidth,
     borderRadius: 0,
     overflow: 'hidden',
   },
+  meetingsQuickLinkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
   meetingsQuickLinkIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 0,
+    width: 32,
+    height: 32,
+    borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 10,
+    flexShrink: 0,
+  },
+  meetingsQuickLinkTextCol: {
+    flex: 1,
+    minWidth: 0,
   },
   meetingsQuickLinkTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
-    marginBottom: 6,
+    marginBottom: 2,
   },
   meetingsQuickLinkSubtitle: {
-    fontSize: 11,
-    lineHeight: 15,
-    flex: 1,
-  },
-  meetingsQuickLinkChevron: {
-    position: 'absolute',
-    right: 12,
-    top: 14,
+    fontSize: 10,
+    lineHeight: 14,
   },
   meetingHistoryEntryCard: {
     marginTop: 10,

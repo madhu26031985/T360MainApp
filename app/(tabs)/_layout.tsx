@@ -16,9 +16,12 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { EXCOMM_UI } from '@/lib/excommUiTokens';
+import { prefetchClubTabSession } from '@/lib/clubTabLandingData';
+import { prefetchMeetingsTabSession } from '@/lib/meetingsTabData';
 
 const FOOTER_NAV_ICON_SIZE = 15;
 
@@ -123,6 +126,13 @@ function MeetingStyleTabBar({ state, navigation }: BottomTabBarProps) {
 
 export default function TabLayout() {
   const { user } = useAuth();
+
+  useEffect(() => {
+    const clubId = user?.currentClubId;
+    if (!clubId) return;
+    prefetchClubTabSession(clubId);
+    prefetchMeetingsTabSession(clubId);
+  }, [user?.currentClubId]);
 
   const hasClub = user?.currentClubId != null;
   const isExComm =

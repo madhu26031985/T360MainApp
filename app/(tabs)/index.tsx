@@ -1894,10 +1894,11 @@ export default function MyJourney() {
   }, [allowBackgroundPrefetch, user?.currentClubId]);
 
   useEffect(() => {
-    if (!allowBackgroundPrefetch) return;
-    prefetchClubLandingCritical(user?.currentClubId ?? null);
-    prefetchMeetingsTabSession(user?.currentClubId ?? null);
-  }, [allowBackgroundPrefetch, user?.currentClubId]);
+    const clubId = user?.currentClubId;
+    if (!clubId) return;
+    prefetchClubLandingCritical(clubId);
+    prefetchMeetingsTabSession(clubId);
+  }, [user?.currentClubId]);
 
   useEffect(() => {
     if (!allowBackgroundPrefetch) return;
@@ -2443,6 +2444,7 @@ export default function MyJourney() {
                     vpeName={clubVpeName}
                     borderColor={N.border}
                     primaryColor={theme.colors.primary}
+                    embedded
                     style={styles.homeOpenMeetingsHorizonCard}
                   />
               )}
@@ -3468,13 +3470,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     lineHeight: 18,
     marginBottom: 4,
-  },
-  noOpenMeetingMemberMessage: {
-    flex: 1,
-    minWidth: 0,
-  },
-  noOpenMeetingMemberSubline: {
-    marginTop: 4,
   },
 
   heroCardContent: {

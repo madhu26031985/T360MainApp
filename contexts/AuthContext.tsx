@@ -6,7 +6,11 @@ import { Platform } from 'react-native';
 import { Alert } from 'react-native';
 import Constants from 'expo-constants';
 import * as WebBrowser from 'expo-web-browser';
-import { invalidateClubLandingCriticalCache } from '@/lib/clubTabLandingData';
+import {
+  invalidateClubLandingCriticalCache,
+  prefetchClubTabSession,
+} from '@/lib/clubTabLandingData';
+import { invalidateClubTabSession } from '@/lib/clubTabSessionCache';
 
 // Conditional logging - only logs in development mode
 const isDev = __DEV__;
@@ -563,6 +567,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       devLog('✅ AuthContext: Setting user object in state');
       setUser(existingUser);
+      if (existingUser.currentClubId) {
+        prefetchClubTabSession(existingUser.currentClubId);
+      }
     } catch (error) {
       console.error('💥 AuthContext: Error processing user profile:', error);
       setFallbackUser(supabaseUser);
@@ -888,6 +895,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     invalidateClubLandingCriticalCache();
+    invalidateClubTabSession();
     setUser(null);
     setSession(null);
     setIsAuthenticated(false);
@@ -938,7 +946,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       devLog('✅ AuthContext: Club switched successfully to:', selectedClub.name);
       invalidateClubLandingCriticalCache();
+      invalidateClubTabSession();
       setUser(updatedUser);
+      prefetchClubTabSession(selectedClub.id);
     } catch (error) {
       console.error('💥 AuthContext: Error switching club:', error);
     }
