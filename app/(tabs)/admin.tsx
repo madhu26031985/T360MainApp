@@ -21,6 +21,13 @@ import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { prefetchClubInfoManagement } from '@/lib/prefetchClubInfoManagement';
 import { prefetchExcommManagement } from '@/lib/prefetchExcommManagement';
+import T360ClubOnboardingBox from '@/components/T360ClubOnboardingBox';
+import {
+  EMPTY_T360_CLUB_ONBOARDING,
+  fetchT360ClubOnboardingProgress,
+  shouldShowT360ClubOnboarding,
+  type T360ClubOnboardingProgress,
+} from '@/lib/t360ClubOnboarding';
 
 /** Notion-like neutrals — flat blocks, hairline borders */
 const N = {
@@ -123,8 +130,10 @@ export default function AdminPanel() {
   const queryClient = useQueryClient();
 
   const [onboardingLoading, setOnboardingLoading] = useState(false);
-  const [onboardingStep, setOnboardingStep] = useState<0 | 1 | 2 | 3>(0);
   const [shouldShowOnboarding, setShouldShowOnboarding] = useState(false);
+  const [onboardingProgress, setOnboardingProgress] = useState<T360ClubOnboardingProgress>(
+    EMPTY_T360_CLUB_ONBOARDING
+  );
   const [openMeetingCount, setOpenMeetingCount] = useState(0);
 
   const loadOpenMeetingCount = useCallback(async () => {
@@ -168,52 +177,16 @@ export default function AdminPanel() {
     setOnboardingLoading(true);
 
     try {
-      // Show onboarding only for clubs created by the current user.
-      const { data: club, error: clubError } = await supabase
-        .from('clubs')
-        .select('id, created_by')
-        .eq('id', clubId)
-        .maybeSingle();
-
-      if (clubError) {
-        console.error('Onboarding: failed to load club:', clubError);
-        return;
-      }
-
-      if (!club || club.created_by !== userId) {
-        setOnboardingStep(0);
+      const showForClub = await shouldShowT360ClubOnboarding(clubId, userId);
+      if (!showForClub) {
         setShouldShowOnboarding(false);
+        setOnboardingProgress(EMPTY_T360_CLUB_ONBOARDING);
         return;
       }
 
-      // Step completion is derived from existing records.
-      const [meetingRow, roleBookedRow, closedMeetingRow] = await Promise.all([
-        supabase
-          .from('app_club_meeting')
-          .select('id')
-          .eq('club_id', clubId)
-          .limit(1),
-        supabase
-          .from('app_meeting_roles_management')
-          .select('id')
-          .eq('club_id', clubId)
-          .eq('booking_status', 'booked')
-          .limit(1),
-        supabase
-          .from('app_club_meeting')
-          .select('id')
-          .eq('club_id', clubId)
-          .eq('meeting_status', 'close')
-          .limit(1),
-      ]);
-
-      const step1Done = Boolean(meetingRow.data?.length);
-      const step2Done = Boolean(roleBookedRow.data?.length);
-      const step3Done = Boolean(closedMeetingRow.data?.length);
-
-      const completedStep = step3Done ? 3 : step2Done ? 2 : step1Done ? 1 : 0;
-      setOnboardingStep(completedStep);
-      setShouldShowOnboarding(completedStep < 3);
+      const progress = await fetchT360ClubOnboardingProgress(clubId);
+      setOnboardingProgress(progress);
+      setShouldShowOnboarding(!progress.isComplete);
     } catch (e) {
       console.error('Onboarding: unexpected error:', e);
     } finally {
@@ -393,90 +366,13 @@ export default function AdminPanel() {
             clubIconColor="#334155"
           />
           <View style={[styles.adminMasterDivider, { backgroundColor: N.border }]} />
-          {shouldShowOnboarding && onboardingStep < 3 ? (
-            <View style={[styles.onboardingCard, { backgroundColor: N.page, borderColor: N.border }]}>
-              <View style={styles.onboardingHeaderRow}>
-                <View style={[styles.onboardingBadge, { backgroundColor: N.accentSoft, borderColor: N.accentSoftBorder }]}>
-                  <Text style={[styles.onboardingBadgeText, { color: N.accent }]} maxFontSizeMultiplier={1.2}>
-                    {Math.min(3, onboardingStep + 1)}
-                  </Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.onboardingTitle, { color: N.text }]} maxFontSizeMultiplier={1.2}>
-                    Getting started
-                  </Text>
-                  <Text style={[styles.onboardingSubtitle, { color: N.textSecondary }]} maxFontSizeMultiplier={1.2}>
-                    {onboardingLoading ? 'Loading…' : 'Complete each step in order.'}
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.timeline}>
-                {[
-                  { n: 1 as const, label: 'Create meeting' },
-                  { n: 2 as const, label: 'Book a role' },
-                  { n: 3 as const, label: 'Close meeting' },
-                ].map((step) => {
-                  const done = onboardingStep >= step.n;
-                  const isActive = onboardingStep < 3 && step.n === onboardingStep + 1;
-                  const circleBackground = done ? N.success : isActive ? N.accent : N.surface;
-                  const circleText = done ? '✓' : String(step.n);
-                  const circleTextColor = done || isActive ? N.surface : N.textSecondary;
-
-                  return (
-                    <View key={step.n} style={styles.timelineRow}>
-                      <View style={styles.timelineIconCol}>
-                        <View
-                          style={[
-                            styles.timelineCircle,
-                            { backgroundColor: circleBackground },
-                            !done && !isActive && {
-                              borderWidth: 1,
-                              borderColor: N.borderStrong,
-                            },
-                          ]}
-                        >
-                          <Text style={[styles.timelineCircleText, { color: circleTextColor }]} maxFontSizeMultiplier={1.3}>
-                            {circleText}
-                          </Text>
-                        </View>
-                        {step.n !== 3 && (
-                          <View
-                            style={[
-                              styles.timelineLine,
-                              { backgroundColor: onboardingStep >= step.n ? N.accent : N.border },
-                            ]}
-                          />
-                        )}
-                      </View>
-                      <View style={styles.timelineTextCol}>
-                        <Text
-                          style={[
-                            styles.timelineLabel,
-                            {
-                              color: done ? N.success : isActive ? N.text : N.textSecondary,
-                              fontWeight: isActive ? '600' : '500',
-                            },
-                          ]}
-                          maxFontSizeMultiplier={1.2}
-                          numberOfLines={2}
-                        >
-                          {step.label}
-                        </Text>
-                        <Text style={[styles.timelineMeta, { color: N.textTertiary }]} maxFontSizeMultiplier={1.2}>
-                          {done ? 'Done' : step.n === onboardingStep + 1 ? 'In progress' : 'Not started'}
-                        </Text>
-                      </View>
-                    </View>
-                  );
-                })}
-              </View>
-            </View>
+          {shouldShowOnboarding ? (
+            <T360ClubOnboardingBox progress={onboardingProgress} loading={onboardingLoading} />
           ) : null}
 
           {canSeeAdminFeature('club_operations') ? (
             <>
-              {(shouldShowOnboarding && onboardingStep < 3) ? (
+              {shouldShowOnboarding ? (
                 <View style={[styles.sectionSpacer, { backgroundColor: 'transparent' }]} />
               ) : null}
               <Text style={[styles.adminMasterSectionTitle, { color: N.textSecondary }]} maxFontSizeMultiplier={1.2}>
@@ -489,7 +385,7 @@ export default function AdminPanel() {
           {(canSeeAdminFeature('user_management') || canSeeAdminFeature('club_operations')) &&
           clubUserManagementItems.length > 0 ? (
             <>
-              {(shouldShowOnboarding && onboardingStep < 3) || canSeeAdminFeature('club_operations') ? (
+              {shouldShowOnboarding || canSeeAdminFeature('club_operations') ? (
                 <View style={[styles.sectionSpacer, { backgroundColor: 'transparent' }]} />
               ) : null}
               <Text style={[styles.adminMasterSectionTitle, { color: N.textSecondary }]} maxFontSizeMultiplier={1.2}>
@@ -501,7 +397,7 @@ export default function AdminPanel() {
 
           {meetingManagementItems.length > 0 ? (
             <>
-              {(shouldShowOnboarding && onboardingStep < 3) ||
+              {shouldShowOnboarding ||
               canSeeAdminFeature('club_operations') ||
               ((canSeeAdminFeature('user_management') || canSeeAdminFeature('club_operations')) &&
                 clubUserManagementItems.length > 0) ? (
@@ -640,83 +536,4 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
 
-  onboardingCard: {
-    marginBottom: 16,
-    borderWidth: 1,
-    borderRadius: 4,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-  },
-  onboardingHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-    gap: 12,
-  },
-  onboardingBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 4,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  onboardingBadgeText: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  onboardingTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    letterSpacing: -0.2,
-    marginBottom: 2,
-  },
-  onboardingSubtitle: {
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: '400',
-  },
-
-  timeline: {
-    gap: 10,
-  },
-  timelineRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-  },
-  timelineIconCol: {
-    width: 30,
-    alignItems: 'center',
-  },
-  timelineCircle: {
-    width: 26,
-    height: 26,
-    borderRadius: 4,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  timelineCircleText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  timelineLine: {
-    width: 3,
-    height: 18,
-    borderRadius: 2,
-    marginTop: 2,
-  },
-  timelineTextCol: {
-    flex: 1,
-    paddingTop: 1,
-  },
-  timelineLabel: {
-    fontSize: 14,
-    letterSpacing: -0.15,
-  },
-  timelineMeta: {
-    fontSize: 12,
-    fontWeight: '400',
-    marginTop: 2,
-  },
 });
