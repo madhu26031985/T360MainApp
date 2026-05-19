@@ -1218,63 +1218,60 @@ export default function ClubMeetings() {
           )}
 
           <View style={[styles.meetingsMasterDivider, { backgroundColor: theme.colors.border }]} />
-          <View style={styles.meetingHistorySection}>
-            <Text style={[styles.sectionTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3}>
-              Meeting History
-            </Text>
-            <TouchableOpacity
-              style={[
-                styles.meetingHistoryEntryCard,
-                { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
-              ]}
-              onPress={() => router.push('/meeting-history')}
-              activeOpacity={0.8}
-              accessibilityLabel="Open meeting history page"
-            >
-              <View style={[styles.comingSoonIcon, { backgroundColor: theme.colors.textSecondary + '15' }]}>
-                <Clock size={20} color="#6366F1" />
-              </View>
-              <View style={styles.comingSoonContent}>
-                <Text style={[styles.comingSoonTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3}>
-                  {isLoading ? 'Loading meeting history…' : 'View meeting history'}
+          <View style={styles.meetingsQuickLinksSection}>
+            <View style={styles.meetingsQuickLinksRow}>
+              <TouchableOpacity
+                style={[
+                  styles.meetingsQuickLinkBox,
+                  { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+                ]}
+                onPress={() => router.push('/meeting-history')}
+                activeOpacity={0.8}
+                accessibilityLabel="Open meeting history page"
+              >
+                <View style={[styles.meetingsQuickLinkIcon, { backgroundColor: theme.colors.textSecondary + '15' }]}>
+                  <Clock size={20} color="#6366F1" />
+                </View>
+                <Text style={[styles.meetingsQuickLinkTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.25}>
+                  Meeting History
                 </Text>
-                <Text style={[styles.comingSoonSubtitle, { color: theme.colors.textSecondary }]} maxFontSizeMultiplier={1.2}>
+                <Text
+                  style={[styles.meetingsQuickLinkSubtitle, { color: theme.colors.textSecondary }]}
+                  maxFontSizeMultiplier={1.2}
+                  numberOfLines={2}
+                >
                   {isLoading
-                    ? 'Preparing completed meetings.'
-                    : `${meetingHistory.length} completed meeting${meetingHistory.length === 1 ? '' : 's'} available`}
+                    ? 'Loading…'
+                    : `${meetingHistory.length} completed meeting${meetingHistory.length === 1 ? '' : 's'}`}
                 </Text>
-              </View>
-              <ChevronRight size={14} color={theme.colors.textSecondary} />
-            </TouchableOpacity>
-          </View>
+                <ChevronRight size={14} color={theme.colors.textSecondary} style={styles.meetingsQuickLinkChevron} />
+              </TouchableOpacity>
 
-          <View style={[styles.meetingsMasterDivider, { backgroundColor: theme.colors.border }]} />
-          <View style={styles.meetingHistorySection}>
-            <Text style={[styles.sectionTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3}>
-              Meeting Reports
-            </Text>
-            <TouchableOpacity
-              style={[
-                styles.meetingHistoryEntryCard,
-                { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
-              ]}
-              onPress={() => router.push('/meeting-reports')}
-              activeOpacity={0.8}
-              accessibilityLabel="Open meeting reports page"
-            >
-              <View style={[styles.comingSoonIcon, { backgroundColor: '#3b82f615' }]}>
-                <ClipboardList size={20} color="#0EA5E9" />
-              </View>
-              <View style={styles.comingSoonContent}>
-                <Text style={[styles.comingSoonTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3}>
-                  View meeting reports
+              <TouchableOpacity
+                style={[
+                  styles.meetingsQuickLinkBox,
+                  { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+                ]}
+                onPress={() => router.push('/meeting-reports')}
+                activeOpacity={0.8}
+                accessibilityLabel="Open meeting reports page"
+              >
+                <View style={[styles.meetingsQuickLinkIcon, { backgroundColor: '#3b82f615' }]}>
+                  <ClipboardList size={20} color="#0EA5E9" />
+                </View>
+                <Text style={[styles.meetingsQuickLinkTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.25}>
+                  Meeting Reports
                 </Text>
-                <Text style={[styles.comingSoonSubtitle, { color: theme.colors.textSecondary }]} maxFontSizeMultiplier={1.2}>
+                <Text
+                  style={[styles.meetingsQuickLinkSubtitle, { color: theme.colors.textSecondary }]}
+                  maxFontSizeMultiplier={1.2}
+                  numberOfLines={2}
+                >
                   Historical reports available
                 </Text>
-              </View>
-              <ChevronRight size={14} color={theme.colors.textSecondary} />
-            </TouchableOpacity>
+                <ChevronRight size={14} color={theme.colors.textSecondary} style={styles.meetingsQuickLinkChevron} />
+              </TouchableOpacity>
+            </View>
           </View>
 
           </View>
@@ -1764,8 +1761,44 @@ const styles = StyleSheet.create({
   nextMeetingsList: {
     gap: 16,
   },
-  meetingHistorySection: {
-    paddingBottom: 0,
+  meetingsQuickLinksSection: {
+    paddingBottom: 8,
+  },
+  meetingsQuickLinksRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 4,
+  },
+  meetingsQuickLinkBox: {
+    flex: 1,
+    padding: 14,
+    minHeight: 120,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 0,
+    overflow: 'hidden',
+  },
+  meetingsQuickLinkIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  meetingsQuickLinkTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    marginBottom: 6,
+  },
+  meetingsQuickLinkSubtitle: {
+    fontSize: 11,
+    lineHeight: 15,
+    flex: 1,
+  },
+  meetingsQuickLinkChevron: {
+    position: 'absolute',
+    right: 12,
+    top: 14,
   },
   meetingHistoryEntryCard: {
     marginTop: 10,
