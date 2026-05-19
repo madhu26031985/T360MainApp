@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Modal, Tex
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
+import { openTrainingKbFromCurrentScreen } from '@/lib/trainingBackNavigation';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -1234,7 +1235,7 @@ export default function BookARole() {
           <Text style={[styles.headerTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3}>Book a Role</Text>
           <TouchableOpacity
             style={styles.headerHelpButton}
-            onPress={() => router.push('/t360-training-book-a-role')}
+            onPress={() => openTrainingKbFromCurrentScreen('/t360-training-book-a-role')}
             accessibilityLabel="Book a Role help"
             accessibilityRole="button"
           >
@@ -1264,7 +1265,7 @@ export default function BookARole() {
         <Text style={[styles.headerTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3}>Book a Role</Text>
         <TouchableOpacity
           style={styles.headerHelpButton}
-          onPress={() => router.push('/t360-training-book-a-role')}
+          onPress={() => openTrainingKbFromCurrentScreen('/t360-training-book-a-role')}
           accessibilityLabel="Book a Role help"
           accessibilityRole="button"
         >

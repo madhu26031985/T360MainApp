@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, useWindowDimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { openTrainingKbFromCurrentScreen } from '@/lib/trainingBackNavigation';
 import { ArrowLeft, Users, Sparkles, Home, Calendar, Settings, Shield, UserCheck, Award, Info } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -25,13 +26,7 @@ export default function MyGrowthScreen() {
   const [tab, setTab] = useState<GrowthTab>('attendance');
 
   const openMyGrowthKb = () => {
-    if (Platform.OS === 'web') {
-      if (typeof window !== 'undefined') {
-        window.location.assign(MY_GROWTH_KB_URL);
-      }
-      return;
-    }
-    router.push('/t360-training-my-growth');
+    openTrainingKbFromCurrentScreen('/t360-training-my-growth');
   };
 
   const tabButton = (

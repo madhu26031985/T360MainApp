@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, KeyboardAv
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useState, useEffect } from 'react';
 import { router, type Href } from 'expo-router';
+import { openTrainingKbFromCurrentScreen } from '@/lib/trainingBackNavigation';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -379,13 +380,7 @@ export default function MeetingRecords() {
   );
 
   const openMeetingHistoryKb = () => {
-    if (Platform.OS === 'web') {
-      if (typeof window !== 'undefined') {
-        window.location.assign(MEETING_HISTORY_KB_URL);
-      }
-      return;
-    }
-    router.push('/t360-training-meeting-history');
+    openTrainingKbFromCurrentScreen('/t360-training-meeting-history');
   };
 
   if (isLoading) {

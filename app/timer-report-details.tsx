@@ -3,6 +3,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
+import { openTrainingKbFromCurrentScreen } from '@/lib/trainingBackNavigation';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -2126,13 +2127,7 @@ export default function TimerReportDetails() {
   );
 
   const openTimerRoleKb = () => {
-    if (Platform.OS === 'web') {
-      if (typeof window !== 'undefined') {
-        window.location.assign(TIMER_ROLE_KB_URL);
-      }
-      return;
-    }
-    router.push('/t360-training-timer-role');
+    openTrainingKbFromCurrentScreen('/t360-training-timer-role');
   };
 
   const renderTimerHeaderRight = () => (

@@ -3,6 +3,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
+import { openTrainingKbFromCurrentScreen } from '@/lib/trainingBackNavigation';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -1590,13 +1591,7 @@ export default function AhCounterCorner() {
   // The screen should open instantly; sections show their own spinners/placeholders.
 
   const openAhCounterKb = () => {
-    if (Platform.OS === 'web') {
-      if (typeof window !== 'undefined') {
-        window.location.assign(AH_COUNTER_KB_URL);
-      }
-      return;
-    }
-    router.push('/t360-training-ah-counter-role');
+    openTrainingKbFromCurrentScreen('/t360-training-ah-counter-role');
   };
 
   const renderAhCounterHeaderRight = () => (

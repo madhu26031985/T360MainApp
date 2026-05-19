@@ -5,7 +5,7 @@ import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { EXCOMM_UI } from '@/lib/excommUiTokens';
-import { goBackOrReplace } from '@/lib/trainingBackNavigation';
+import { goBackOrReplace, openTrainingKbFromCurrentScreen } from '@/lib/trainingBackNavigation';
 import {
   ArrowLeft,
   CreditCard as Edit3,
@@ -518,7 +518,7 @@ export default function ManageExistingUsers() {
         </Text>
         <TouchableOpacity
           style={styles.headerHelpButton}
-          onPress={() => router.push('/t360-training-excomm-manage-club-members')}
+          onPress={() => openTrainingKbFromCurrentScreen('/t360-training-excomm-manage-club-members')}
           accessibilityLabel="Manage Club Users help"
           accessibilityRole="button"
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}

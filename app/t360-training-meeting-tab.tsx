@@ -2,7 +2,7 @@ import React from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { ArrowLeft } from 'lucide-react-native';
-import { goBackOrReplace } from '@/lib/trainingBackNavigation';
+import { useTrainingKbBack } from '@/lib/trainingBackNavigation';
 
 const N = {
   page: '#FBFBFA',
@@ -99,12 +99,13 @@ function CheckList({ lines }: { lines: string[] }) {
 }
 
 export default function T360TrainingMeetingTabScreen() {
+  const onTrainingKbBack = useTrainingKbBack();
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => goBackOrReplace('/t360-training')}
+          onPress={onTrainingKbBack}
           activeOpacity={0.7}
         >
           <ArrowLeft size={Math.round(22 * FS)} color={N.text} />

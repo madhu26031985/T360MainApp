@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert,
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect } from 'react';
 import { router } from 'expo-router';
+import { openTrainingKbFromCurrentScreen } from '@/lib/trainingBackNavigation';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -331,13 +332,7 @@ export default function SocialMediaManagement() {
   };
 
   const openClubSocialMediaKb = () => {
-    if (Platform.OS === 'web') {
-      if (typeof window !== 'undefined') {
-        window.location.assign(CLUB_SOCIAL_MEDIA_KB_URL);
-      }
-      return;
-    }
-    router.push('/t360-training-club-social-media');
+    openTrainingKbFromCurrentScreen('/t360-training-club-social-media');
   };
 
   if (isLoading) {

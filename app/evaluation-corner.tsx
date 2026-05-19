@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput,
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
+import { openTrainingKbFromCurrentScreen } from '@/lib/trainingBackNavigation';
 import { Linking } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -153,13 +154,7 @@ export default function EvaluationCorner() {
   );
 
   const openPreparedSpeakerKb = () => {
-    if (Platform.OS === 'web') {
-      if (typeof window !== 'undefined') {
-        window.location.assign(PREPARED_SPEAKER_KB_URL);
-      }
-      return;
-    }
-    router.push('/t360-training-prepared-speaker-role');
+    openTrainingKbFromCurrentScreen('/t360-training-prepared-speaker-role');
   };
 
   const upsertAssignedEvaluator = async (booking: RoleBooking, evaluatorId: string | null) => {

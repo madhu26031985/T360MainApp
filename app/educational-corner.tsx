@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
+import { openTrainingKbFromCurrentScreen } from '@/lib/trainingBackNavigation';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -478,7 +479,7 @@ export default function EducationalCorner(): JSX.Element {
           </Text>
           <TouchableOpacity
             style={styles.headerHelpButton}
-            onPress={() => router.push('/t360-training-educational-speaker-role')}
+            onPress={() => openTrainingKbFromCurrentScreen('/t360-training-educational-speaker-role')}
             accessibilityLabel="Educational Speaker help"
             accessibilityRole="button"
           >
@@ -533,7 +534,7 @@ export default function EducationalCorner(): JSX.Element {
         </Text>
         <TouchableOpacity
           style={styles.headerHelpButton}
-          onPress={() => router.push('/t360-training-educational-speaker-role')}
+          onPress={() => openTrainingKbFromCurrentScreen('/t360-training-educational-speaker-role')}
           accessibilityLabel="Educational Speaker help"
           accessibilityRole="button"
         >

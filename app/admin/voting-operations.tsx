@@ -17,6 +17,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect, useRef } from 'react';
 import { router } from 'expo-router';
+import { openTrainingKbFromCurrentScreen } from '@/lib/trainingBackNavigation';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -900,7 +901,7 @@ export default function VotingOperations() {
         <Text style={[styles.headerTitle, { color: N.text }]} maxFontSizeMultiplier={1.3}>Voting Operations</Text>
         <TouchableOpacity
           style={styles.headerHelpButton}
-          onPress={() => router.push('/t360-training-excomm-voting-operations')}
+          onPress={() => openTrainingKbFromCurrentScreen('/t360-training-excomm-voting-operations')}
           accessibilityLabel="Voting Operations help"
           accessibilityRole="button"
         >

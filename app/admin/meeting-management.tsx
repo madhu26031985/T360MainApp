@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform, 
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { router, useFocusEffect } from 'expo-router';
+import { openTrainingKbFromCurrentScreen } from '@/lib/trainingBackNavigation';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -542,7 +543,7 @@ export default function MeetingManagement() {
           </Text>
           <TouchableOpacity
             style={styles.headerHelpButton}
-            onPress={() => router.push('/t360-training-excomm-manage-meetings')}
+            onPress={() => openTrainingKbFromCurrentScreen('/t360-training-excomm-manage-meetings')}
             accessibilityLabel="Create and Manage Meetings help"
             accessibilityRole="button"
           >

@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, Modal, Linking, KeyboardAvoidingView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { openTrainingKbFromCurrentScreen } from '@/lib/trainingBackNavigation';
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Building2, Calendar, Hash, Save, CircleCheck as CheckCircle, Crown, Video, MessageCircle, Info } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -313,7 +314,7 @@ export default function CreateClub() {
         <Text style={[styles.headerTitle, { color: N.text }]} maxFontSizeMultiplier={1.3}>Create New Club</Text>
         <TouchableOpacity
           style={styles.helpButton}
-          onPress={() => router.push('/t360-training-excomm-create-club')}
+          onPress={() => openTrainingKbFromCurrentScreen('/t360-training-excomm-create-club')}
           accessibilityLabel="Create Club help"
           accessibilityRole="button"
         >

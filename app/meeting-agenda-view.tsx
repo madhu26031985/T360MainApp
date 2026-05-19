@@ -19,6 +19,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
+import { openTrainingKbFromCurrentScreen } from '@/lib/trainingBackNavigation';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -1118,7 +1119,7 @@ export function MeetingAgendaViewContent({
         <View style={styles.headerActions}>
           {meeting && (isExcomm || meeting.is_agenda_visible !== false) && (
             <TouchableOpacity
-              onPress={() => router.push('/t360-training-excomm-agenda-creation')}
+              onPress={() => openTrainingKbFromCurrentScreen('/t360-training-excomm-agenda-creation')}
               style={styles.headerButton}
               accessibilityLabel="Agenda Creator help"
               accessibilityRole="button"

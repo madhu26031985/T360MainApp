@@ -9,7 +9,7 @@ import {
   Settings,
   Trash2,
 } from 'lucide-react-native';
-import { goBackOrReplace } from '@/lib/trainingBackNavigation';
+import { useTrainingKbBack } from '@/lib/trainingBackNavigation';
 
 const N = {
   page: '#FBFBFA',
@@ -62,12 +62,13 @@ const mono = Platform.select({
 });
 
 export default function T360TrainingExcommManageClubMembersScreen() {
+  const onTrainingKbBack = useTrainingKbBack();
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => goBackOrReplace('/t360-training')}
+          onPress={onTrainingKbBack}
           activeOpacity={0.7}
         >
           <ArrowLeft size={Math.round(22 * FS)} color={N.text} />

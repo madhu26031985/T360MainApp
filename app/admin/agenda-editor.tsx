@@ -29,6 +29,7 @@ import { AgendaDragScrollContext } from '@/components/admin/agendaDragScrollCont
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Fragment, useState, useEffect, useRef, useMemo } from 'react';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
+import { openTrainingKbFromCurrentScreen } from '@/lib/trainingBackNavigation';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -5580,7 +5581,7 @@ export default function AgendaEditor() {
         <Text style={[styles.headerTitle, { color: theme.colors.text }]} maxFontSizeMultiplier={1.3}>Edit Agenda</Text>
         <View style={styles.headerActions}>
           <TouchableOpacity
-            onPress={() => router.push('/t360-training-excomm-agenda-creation')}
+            onPress={() => openTrainingKbFromCurrentScreen('/t360-training-excomm-agenda-creation')}
             style={styles.saveButton}
             accessibilityLabel="Agenda Creator help"
             accessibilityRole="button"

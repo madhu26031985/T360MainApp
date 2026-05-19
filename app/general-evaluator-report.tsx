@@ -4,6 +4,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
+import { openTrainingKbFromCurrentScreen } from '@/lib/trainingBackNavigation';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -1104,7 +1105,7 @@ export default function GeneralEvaluatorReport() {
         <Text style={[styles.headerTitle, notionType, { color: notion.text }]} maxFontSizeMultiplier={1.3}>General Evaluator Report</Text>
         <TouchableOpacity
           style={styles.infoButton}
-          onPress={() => router.push('/t360-training-general-evaluator-role')}
+          onPress={() => openTrainingKbFromCurrentScreen('/t360-training-general-evaluator-role')}
           accessibilityLabel="General Evaluator help"
           accessibilityRole="button"
         >

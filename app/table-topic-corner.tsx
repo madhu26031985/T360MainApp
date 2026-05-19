@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
+import { openTrainingKbFromCurrentScreen } from '@/lib/trainingBackNavigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -1718,7 +1719,7 @@ export default function TableTopicCorner(): JSX.Element {
         </Text>
         <TouchableOpacity
           style={styles.headerHelpButton}
-          onPress={() => router.push('/t360-training-table-topic-master')}
+          onPress={() => openTrainingKbFromCurrentScreen('/t360-training-table-topic-master')}
           accessibilityLabel="Table Topic Master help"
           accessibilityRole="button"
         >

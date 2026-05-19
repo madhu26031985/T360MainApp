@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect, useLayoutEffect, useCallback, useRef, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
+import { openTrainingKbFromCurrentScreen } from '@/lib/trainingBackNavigation';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -578,13 +579,7 @@ export default function ExCommManagement() {
     [displayRoles, memberModalRoleKey]
   );
   const openClubExcommKb = () => {
-    if (Platform.OS === 'web') {
-      if (typeof window !== 'undefined') {
-        window.location.assign(CLUB_EXCOMM_KB_URL);
-      }
-      return;
-    }
-    router.push('/t360-training-club-excomm');
+    openTrainingKbFromCurrentScreen('/t360-training-club-excomm');
   };
 
   if (!user?.currentClubId) {

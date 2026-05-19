@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert,
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
+import { openTrainingKbFromCurrentScreen } from '@/lib/trainingBackNavigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -438,13 +439,7 @@ export default function ClubInfoManagement() {
   };
 
   const openClubInfoKb = () => {
-    if (Platform.OS === 'web') {
-      if (typeof window !== 'undefined') {
-        window.location.assign(CLUB_INFO_KB_URL);
-      }
-      return;
-    }
-    router.push('/t360-training-club-info-admin');
+    openTrainingKbFromCurrentScreen('/t360-training-club-info-admin');
   };
 
   const renderHeaderRight = (opts?: { showFetching?: boolean }) => (

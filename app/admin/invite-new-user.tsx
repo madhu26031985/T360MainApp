@@ -5,7 +5,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase, supabaseUrl } from '@/lib/supabase';
 import { EXCOMM_UI } from '@/lib/excommUiTokens';
-import { goBackOrReplace } from '@/lib/trainingBackNavigation';
+import { goBackOrReplace, openTrainingKbFromCurrentScreen } from '@/lib/trainingBackNavigation';
 import {
   ArrowLeft,
   Mail,
@@ -614,7 +614,7 @@ export default function InviteNewUser() {
           </Text>
           <TouchableOpacity
             style={styles.headerHelpButton}
-            onPress={() => router.push('/t360-training-excomm-invite-members')}
+            onPress={() => openTrainingKbFromCurrentScreen('/t360-training-excomm-invite-members')}
             accessibilityLabel="Invite Club User help"
             accessibilityRole="button"
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}

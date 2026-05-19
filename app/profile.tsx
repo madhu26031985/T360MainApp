@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, Modal, Keyb
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { router, useFocusEffect } from 'expo-router';
+import { openTrainingKbFromCurrentScreen } from '@/lib/trainingBackNavigation';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -523,13 +524,7 @@ export default function Profile() {
   };
 
   const openMyProfileKb = () => {
-    if (Platform.OS === 'web') {
-      if (typeof window !== 'undefined') {
-        window.location.assign(MY_PROFILE_KB_URL);
-      }
-      return;
-    }
-    router.push('/t360-training-my-profile');
+    openTrainingKbFromCurrentScreen('/t360-training-my-profile');
   };
 
   if (isLoading) {

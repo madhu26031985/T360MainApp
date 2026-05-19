@@ -12,6 +12,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useState, useEffect } from 'react';
 import { router } from 'expo-router';
+import { openTrainingKbFromCurrentScreen } from '@/lib/trainingBackNavigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { EXCOMM_UI } from '@/lib/excommUiTokens';
@@ -339,7 +340,7 @@ export default function LiveVoting() {
         </Text>
         <TouchableOpacity
           style={styles.headerHelpButton}
-          onPress={() => router.push('/t360-training-excomm-voting-operations')}
+          onPress={() => openTrainingKbFromCurrentScreen('/t360-training-excomm-voting-operations')}
           accessibilityLabel="Voting Operations help"
           accessibilityRole="button"
         >

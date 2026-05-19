@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/lib/supabase';
 import { EXCOMM_UI } from '@/lib/excommUiTokens';
-import { goBackOrReplace } from '@/lib/trainingBackNavigation';
+import { goBackOrReplace, openTrainingKbFromCurrentScreen } from '@/lib/trainingBackNavigation';
 import {
   ArrowLeft,
   UserPlus,
@@ -284,7 +284,7 @@ export default function ManageClubUsers() {
               icon={<UserPlus size={18} color={ICON_TILE.invite.fg} strokeWidth={1.75} />}
               iconBackground={ICON_TILE.invite.bg}
               onPress={() => router.push('/admin/invite-new-user')}
-              onHelpPress={() => router.push('/t360-training-excomm-invite-members')}
+              onHelpPress={() => openTrainingKbFromCurrentScreen('/t360-training-excomm-invite-members')}
               helpAccessibilityLabel="Invite Club User help"
             />
             <NotionActionRow
@@ -293,7 +293,7 @@ export default function ManageClubUsers() {
               icon={<Users size={18} color={ICON_TILE.manage.fg} strokeWidth={1.75} />}
               iconBackground={ICON_TILE.manage.bg}
               onPress={() => router.push('/admin/manage-existing-users')}
-              onHelpPress={() => router.push('/t360-training-excomm-manage-club-members')}
+              onHelpPress={() => openTrainingKbFromCurrentScreen('/t360-training-excomm-manage-club-members')}
               helpAccessibilityLabel="Manage Club Users help"
               isLast
             />

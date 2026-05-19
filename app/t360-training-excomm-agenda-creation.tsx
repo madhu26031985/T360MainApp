@@ -2,7 +2,7 @@ import React from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { ArrowLeft } from 'lucide-react-native';
-import { goBackOrReplace } from '@/lib/trainingBackNavigation';
+import { useTrainingKbBack } from '@/lib/trainingBackNavigation';
 import { AgendaCreatorKnowledgeBaseContent } from '@/components/AgendaCreatorKnowledgeBaseContent';
 
 const N = {
@@ -11,12 +11,13 @@ const N = {
 };
 
 export default function T360TrainingExcommAgendaCreationScreen() {
+  const onTrainingKbBack = useTrainingKbBack();
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => goBackOrReplace('/t360-training')}
+          onPress={onTrainingKbBack}
           activeOpacity={0.7}
         >
           <ArrowLeft size={20} color={N.text} />

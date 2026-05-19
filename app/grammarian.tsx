@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Modal, Tex
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
+import { openTrainingKbFromCurrentScreen } from '@/lib/trainingBackNavigation';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -1639,13 +1640,7 @@ export default function GrammarianReport() {
   );
 
   const openGrammarianKb = () => {
-    if (Platform.OS === 'web') {
-      if (typeof window !== 'undefined') {
-        window.location.assign(GRAMMARIAN_KB_URL);
-      }
-      return;
-    }
-    router.push('/t360-training-grammarian-role');
+    openTrainingKbFromCurrentScreen('/t360-training-grammarian-role');
   };
 
   const renderGrammarianHeaderRight = () => (
