@@ -13,6 +13,7 @@ import {
   Share2,
   ChevronRight,
   HelpCircle,
+  BookOpen,
 } from 'lucide-react-native';
 import ClubSwitcher from '@/components/ClubSwitcher';
 import { EXCOMM_UI } from '@/lib/excommUiTokens';
@@ -375,6 +376,21 @@ export default function AdminPanel() {
               {shouldShowOnboarding ? (
                 <View style={[styles.sectionSpacer, { backgroundColor: 'transparent' }]} />
               ) : null}
+              <Text style={[styles.adminMasterSectionTitle, { color: N.textSecondary }]} maxFontSizeMultiplier={1.2}>
+                T360 user guide
+              </Text>
+              <NotionActionList
+                items={[
+                  {
+                    key: 't360-user-guide',
+                    label: 'T360 user guide',
+                    icon: <BookOpen size={18} color="#2383E2" strokeWidth={1.75} />,
+                    iconBackgroundColor: N.accentSoft,
+                    onPress: () => router.push('/t360-training'),
+                  },
+                ]}
+              />
+              <View style={[styles.sectionSpacer, { backgroundColor: 'transparent' }]} />
               <Text style={[styles.adminMasterSectionTitle, { color: N.textSecondary }]} maxFontSizeMultiplier={1.2}>
                 Setting Up the Club
               </Text>

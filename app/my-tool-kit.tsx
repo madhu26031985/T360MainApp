@@ -13,6 +13,7 @@ import {
   Share2,
   FileText,
   HelpCircle,
+  BookOpen,
 } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCallback, useState, useMemo, type ReactNode } from 'react';
@@ -39,6 +40,7 @@ const N = {
   textTertiary: 'rgba(55, 53, 47, 0.45)',
   iconTile: 'rgba(55, 53, 47, 0.06)',
   accent: '#2563EB',
+  accentSoft: 'rgba(37, 99, 235, 0.1)',
 };
 
 type ToolkitTab = 'admin';
@@ -308,6 +310,19 @@ export default function MyToolKitScreen() {
                   isLast={i === clubOpsItems.length - 1}
                 />
               ))}
+            </View>
+            <View style={styles.sectionSpacer} />
+            <Text style={[styles.sectionTitle, { color: N.textSecondary }]} maxFontSizeMultiplier={1.2}>
+              T360 user guide
+            </Text>
+            <View style={[styles.notionGroup, { borderColor: N.border, backgroundColor: N.surface }]}>
+              <NotionRow
+                label="T360 user guide"
+                icon={<BookOpen size={18} color="#2383E2" strokeWidth={1.75} />}
+                iconBackgroundColor={N.accentSoft}
+                onPress={() => router.push('/t360-training')}
+                isLast
+              />
             </View>
           </>
         ) : null}

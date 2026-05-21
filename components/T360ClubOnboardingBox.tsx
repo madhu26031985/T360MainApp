@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { router } from 'expo-router';
 import { ChevronDown, ChevronRight } from 'lucide-react-native';
 import { sectionItems, type T360ClubOnboardingProgress } from '@/lib/t360ClubOnboarding';
 
@@ -81,17 +80,6 @@ export default function T360ClubOnboardingBox({ progress, loading }: Props) {
           >
             <Text style={[styles.toggleButtonText, { color: N.text }]} maxFontSizeMultiplier={1.15}>
               {listExpanded ? 'Close' : 'Open'}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.guideButton, { backgroundColor: N.accentSoft, borderColor: N.accentSoftBorder }]}
-            onPress={() => router.push('/t360-training')}
-            activeOpacity={0.75}
-            accessibilityRole="button"
-            accessibilityLabel="Open T360 User Guide onboarding guide"
-          >
-            <Text style={[styles.guideButtonText, { color: N.accent }]} maxFontSizeMultiplier={1.15}>
-              Onboarding guide
             </Text>
           </TouchableOpacity>
         </View>
@@ -267,19 +255,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   toggleButtonText: {
-    fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: -0.1,
-  },
-  guideButton: {
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    borderRadius: 4,
-    borderWidth: 1,
-    flexShrink: 0,
-    alignSelf: 'flex-start',
-  },
-  guideButtonText: {
     fontSize: 12,
     fontWeight: '600',
     letterSpacing: -0.1,
