@@ -6,9 +6,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { WifiOff, RefreshCw } from 'lucide-react-native';
 import { T360PremiumLaunchSplash } from '@/components/T360PremiumLaunchSplash';
 
+/** Set to true to show the "One Platform. Better Meetings." launch splash on app start. */
+const ENABLE_PREMIUM_LAUNCH_SPLASH = false;
+const POST_LAUNCH_NAV_DELAY_MS = ENABLE_PREMIUM_LAUNCH_SPLASH ? 1100 : 0;
+
 export default function Index() {
   const { isLoading, isAuthenticated, hasInitialized, connectionError, retryConnection } = useAuth();
-  const [launchSequenceDone, setLaunchSequenceDone] = useState(false);
+  const [launchSequenceDone, setLaunchSequenceDone] = useState(!ENABLE_PREMIUM_LAUNCH_SPLASH);
 
   const handleLaunchComplete = useCallback(() => {
     setLaunchSequenceDone(true);
@@ -24,7 +28,7 @@ export default function Index() {
       } else {
         router.replace('/login');
       }
-    }, 1100);
+    }, POST_LAUNCH_NAV_DELAY_MS);
 
     return () => {
       clearTimeout(navTimer);
@@ -58,7 +62,7 @@ export default function Index() {
     );
   }
 
-  if (!launchSequenceDone) {
+  if (ENABLE_PREMIUM_LAUNCH_SPLASH && !launchSequenceDone) {
     return <T360PremiumLaunchSplash onSequenceComplete={handleLaunchComplete} />;
   }
 
